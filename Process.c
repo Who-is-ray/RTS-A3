@@ -48,7 +48,7 @@ void process_IDLE()
 }
 
 // Uart output process
-void process_UART_OUTPUT()
+void process_UART0_OUTPUT()
 {
 	int msg = 0;
 	int size = sizeof(msg);
@@ -392,5 +392,5 @@ void Initialize_Process()
 	reg_process(process_1, PID_1, PRIORITY_3); // register process 1
 	reg_process(process_2, PID_2, PRIORITY_3); // register process 1
 	reg_process(process_3, PID_3, PRIORITY_3); // register process 1
-	reg_process(process_UART_OUTPUT, PID_UART, PRIORITY_UART); // fegister uart output process
+	reg_process(process_UART0_OUTPUT, PID_UART, PRIORITY_UART); // fegister uart output process
 }

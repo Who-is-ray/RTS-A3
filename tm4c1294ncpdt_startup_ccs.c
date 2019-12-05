@@ -54,7 +54,8 @@ extern uint32_t __STACK_TOP;
 // External declarations for the interrupt handlers used by the application.
 //
 //*****************************************************************************
-extern void UART0_IntHandler(void); // Uart interrupt handler
+extern void UART0_IntHandler(void); // Uart 0 interrupt handler
+extern void UART1_IntHandler(void); // Uart 1 interrupt handler
 extern void SysTickHandler(void);   // Systick interrupt handler
 extern void SVCall(void);			// SVCall handler
 extern void PendSV_Handler(void);	// PendSV handler
@@ -81,18 +82,18 @@ void (* const g_pfnVectors[])(void) =
     0,                                      // Reserved
     0,                                      // Reserved
     0,                                      // Reserved
-	SVCall,									// SVCall handler
+	SVCall,								// SVCall handler
     IntDefaultHandler,                      // Debug monitor handler
     0,                                      // Reserved
-	PendSV_Handler,							// The PendSV handler
-	SysTickHandler,                         // The SysTick handler
+	PendSV_Handler,						// The PendSV handler
+	SysTickHandler,                     // The SysTick handler
     IntDefaultHandler,                      // GPIO Port A
     IntDefaultHandler,                      // GPIO Port B
     IntDefaultHandler,                      // GPIO Port C
     IntDefaultHandler,                      // GPIO Port D
     IntDefaultHandler,                      // GPIO Port E
-    UART0_IntHandler,                       // UART0 Rx and Tx
-    IntDefaultHandler,                      // UART1 Rx and Tx
+    UART0_IntHandler,                   // UART0 Rx and Tx
+	UART1_IntHandler,					// UART1 Rx and Tx
     IntDefaultHandler,                      // SSI0 Rx and Tx
     IntDefaultHandler,                      // I2C0 Master and Slave
     IntDefaultHandler,                      // PWM Fault
