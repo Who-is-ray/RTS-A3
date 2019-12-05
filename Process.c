@@ -17,6 +17,7 @@
 #include "PKCall.h"
 #include "Uart.h"
 #include "QueueFuncs.h"
+#include "ApplicationLayer.h"
 
 #define PSR_INITIAL_VAL		0x01000000 // PSR initial value
 #define INITIAL_STACK_TOP_OFFSET    960 //stack top offset of stack pointer

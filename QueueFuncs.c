@@ -23,13 +23,15 @@ void Enqueue(void* _item, QueueItem** queue_head)
     }
     else
     {
+		QueueItem* queue_tail = (*queue_head)->Prev;
+
         // set new item's next and previous
-        item->Next = (*queue_head)->Next;
-        item->Prev = (*queue_head)->Prev;
+        item->Next = queue_tail->Next;
+        item->Prev = queue_tail->Prev;
 
         // change connect queue
-        (*queue_head)->Next->Prev = item;
-        (*queue_head)->Next = item;
+		queue_tail->Next->Prev = item;
+		queue_tail->Next = item;
     }
 }
 
