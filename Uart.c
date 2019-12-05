@@ -146,11 +146,11 @@ void UART1_IntHandler(void)
 		/* XMIT done - clear interrupt */
 		UART1_ICR_R |= UART_INT_TX;
 
-		char data;
-		if (DeQueueIO(OUTPUT, UART, &data)) // if output queue is not empty
-			UART1_DR_R = data;  // transmit next data
-		else // if output queue is empty
-			UART_STATUS = IDLE; // idle
+		//char data;
+		//if (DeQueueIO(OUTPUT, UART, &data)) // if output queue is not empty
+		//	UART1_DR_R = data;  // transmit next data
+		//else // if output queue is empty
+		//	UART_STATUS = IDLE; // idle
 	}
 }
 
