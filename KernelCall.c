@@ -28,11 +28,11 @@ void KernelInitialization()
 	/* Initialize UART 0*/
 	UART0_Init();           // Initialize UART0
 	InterruptEnable(INT_VEC_UART0);       // Enable UART0 interrupts
-	UART0_IntEnable(UART_INT_RX | UART_INT_TX); // Enable Receive and Transmit interrupts
+	UART0_IntEnable(UART_INT_TX); // Enable Receive and Transmit interrupts
 
 	/* Initialize UART 0*/
-	UART1_Init();           // Initialize UART0
-	InterruptEnable(INT_VEC_UART1);       // Enable UART0 interrupts
+	UART1_Init();           // Initialize UART1
+	InterruptEnable(INT_VEC_UART1);       // Enable UART1 interrupts
 	UART1_IntEnable(UART_INT_RX | UART_INT_TX); // Enable Receive and Transmit interrupts
 
 	PENDSV_ON = FALSE;
