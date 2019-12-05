@@ -122,7 +122,7 @@ void UART1_IntEnable(unsigned long flags)
 	UART1_IM_R |= flags;
 }
 
-void UART0_IntDisable(unsigned long flags)
+void UART1_IntDisable(unsigned long flags)
 {
 	/* Clear specified bits for interrupt */
 	UART1_IM_R &= ~flags;
@@ -138,7 +138,7 @@ void UART1_IntHandler(void)
 	{
 		/* RECV done - clear interrupt and make char available to application */
 		UART1_ICR_R |= UART_INT_RX;
-		EnQueueIO(INPUT, UART, UART0_DR_R);
+		// EnQueueIO(INPUT, UART, UART0_DR_R);
 	}
 
 	if (UART1_MIS_R & UART_INT_TX)
