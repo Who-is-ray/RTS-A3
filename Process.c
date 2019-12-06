@@ -21,14 +21,17 @@
 
 #define PSR_INITIAL_VAL		0x01000000 // PSR initial value
 #define INITIAL_STACK_TOP_OFFSET    960 //stack top offset of stack pointer
-#define UART_OUTPUT_MBX	20 //Uart output mailbox number
-#define PID_IDLE		0 //process id Idle
-#define PID_UART		4 //process id Uart
-#define PRIORITY_3		3  //priority 3
-#define PRIORITY_4		4  //priority 4
-#define PRIORITY_UART	5  //priority Idle
-#define PRIORITY_IDLE	0  //priority Uart
-
+#define RECEIVED_PORCESSOR_MBX 19 //Received message processor mailbox
+#define UART_OUTPUT_MBX	20	//Uart output mailbox number
+#define PID_IDLE		0	//process id Idle
+#define PID_UART		4	//process id Uart
+#define PRIORITY_3		3	//priority 3
+#define PRIORITY_4		4	//priority 4
+#define PRIORITY_UART	5	//priority Idle
+#define PRIORITY_IDLE	0	//priority Uart
+#define TWO_ARGS		2	//two arguments
+#define ONE_ARG			1	//one argument
+#define NO_ARG			0	//no argument
 
 // create and initialize priority list
 PCB* PRIORITY_LIST[PRIORITY_LIST_SIZE] = {NULL, NULL, NULL, NULL, NULL, NULL};
@@ -166,30 +169,115 @@ unsigned long get_SP()
 	return 0;
 }
 
+int Run_machine(program* prog, int locomotive)
+{
+	/* Follows instructions in supplied program (the route) */
+	unsigned int pc;
+	unsigned int curr_spd = NULL, curr_dir = CW, destination = NULL;
+	// Frame current_frame;
+	// Frame previous_frame;
+
+	pc = 0;
+	while (pc < prog->length && pc < MAXSIZE && prog->action[pc] != END)
+	{
+		printf("%d: ", pc);
+		switch (prog->action[pc])
+		{
+		case GO: /* Go to HS# to dir and spd */
+			printf("GO: ");
+			pc++;
+			curr_dir = prog->action[pc++];		
+			curr_spd = prog->action[pc++];
+			destination = prog->action[pc];
+
+			printf("Direction: %s Speed: %d HS: %d\n",
+				curr_dir == CW ? "CW" : "CCW", curr_spd, destination);
+
+			//create message
+			mag_dir speed = { curr_spd, IGNORED, curr_dir };
+			Message msg = { LOCOMOTIVE_CONTROLER, locomotive};
+			memcpy(&msg.arg2,&speed, sizeof(msg.arg2));
+
+			// encode to packet
+
+
+			while (TRUE)
+			{
+				int hole_sensor = NULL;
+				int sz = sizeof(hole_sensor);
+				int sender;
+				Receive(locomotive, &sender, &hole_sensor, &sz); // receive message
+
+				if (sender == RECEIVED_PORCESSOR_MBX) // if reached a hole sensor
+				{
+					// send acknowledgement
+
+					if (hole_sensor == destination) // if reached destination
+						break;
+				}
+				//else if (sender == ) // if haven't received acknowledgement in time cycle
+				//{
+				//	// Resend message
+
+				//}
+			}
+
+			break;
+		case SWITCH: /* Throw specific switch */
+			printf("SWITCH: ");
+			pc++;
+			printf("Switch: %d %s\n", prog->action[pc++],
+				prog->action[pc] ? "STRAIGHT" : "DIVERGED");
+			break;
+		case HALT: /* Halt the train */
+			printf("HALT\n");
+			curr_spd = 0;
+			printf("Speed to zero\n");
+			break;
+		case PAUSE: /* Pause the train for # second */
+			printf("PAUSE\n");
+			pc++;
+			printf("Speed to zero\n");
+			printf("Wait for %d seconds\n", prog->action[pc]);
+			printf("Set speed to: %d\n", curr_spd);
+			break;
+		default:
+			printf("Unknown inst at pc: %d", pc);
+		}
+		pc++;
+	}
+	printf("End of program\n");
+
+	return TRUE;
+}
+
 void Train_1_Application_Process()
 {
 	int mbx = Bind(LOCOMOTIVE_1); // bind mailbox
-	Message_QueueItem* first_msg = NULL; // create message queue head
 
 	// create route
-	program route1 = { 13,
+	program route = { 13,
 	GO, CW, 4, 3, /* Go CW @ speed 4 to HS#3 */
 	HALT,
 	SWITCH, 0, DIVERGED, /* Switch '0' to diverged */
 	GO, CW, 2, 21,
 	END };
 
-	// convert program to message queue
-	if (GenerateMessages(&route1, LOCOMOTIVE_1, &first_msg)) // if success
-	{
-
-	}
-	else // if failed
-	{
-
-	}
+	Run_machine(&route, LOCOMOTIVE_1);
 }
 
+/* The process to manage the received message from trainset*/
+void Received_Message_Processor()
+{
+	int mbx = Bind(RECEIVED_PORCESSOR_MBX); // bind mailbox
+	Message* msg = NULL;
+	int size = sizeof(msg);
+	int sender = NULL;
+	while (TRUE)
+	{
+		Receive(RECEIVED_PORCESSOR_MBX, &sender, &msg, &size); // check if message arrived
+	}
+}
 
 // Initialize all processes and force switch to thread mode
 void Initialize_Process()

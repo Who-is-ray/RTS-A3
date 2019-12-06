@@ -8,10 +8,10 @@
 #include "DataLinkLayer.h"
 #include "ApplicationLayer.h"
 
-volatile int Ns = 0;
-volatile int Nr = 0;
+volatile char Ns = 0;
+volatile char Nr = 0;
 
-void SendMessage(Message* msg)
+void EncodeMsgToPacket(Message* msg, int length)
 {
 
 }
