@@ -8,10 +8,28 @@
 #include "DataLinkLayer.h"
 #include "ApplicationLayer.h"
 
-volatile char Ns = 0;
-volatile char Nr = 0;
+extern char Ns;
+extern char Nr;
 
-void EncodeMsgToPacket(Message* msg, int length)
+#define CONTROL	0	//position of control
+#define LENGTH	1	//position of length
+#define MESSAGE	2	//position of message
+#define PACKET_SIZE_OFFSET	2	// data packet has 2 more byte than message
+
+void EncodeMsgToPacket(char* msg, int length, packet* pkt)
 {
+	pkt->size = length + PACKET_SIZE_OFFSET;
 
+	// set control
+	((control*)pkt->pkt[CONTROL])->type = DATA;
+	((control*)pkt->pkt[CONTROL])->ns = Ns;
+	((control*)pkt->pkt[CONTROL])->nr = Nr;
+
+	// set lenght
+	pkt->pkt[LENGTH] = length;
+
+	// set message
+	int i;
+	for ( i = 0; i < length; i++)
+		pkt->pkt[i + MESSAGE] = msg[i];
 }

@@ -18,11 +18,14 @@
 #include "Uart.h"
 #include "QueueFuncs.h"
 #include "ApplicationLayer.h"
+#include "DataLinkLayer.h"
+#include "PhysicalLayer.h"
 
 #define PSR_INITIAL_VAL		0x01000000 // PSR initial value
 #define INITIAL_STACK_TOP_OFFSET    960 //stack top offset of stack pointer
 #define RECEIVED_PORCESSOR_MBX 19 //Received message processor mailbox
-#define UART_OUTPUT_MBX	20	//Uart output mailbox number
+#define UART0_OUTPUT_MBX	20	//Uart0 output mailbox number
+#define UART1_OUTPUT_MBX	21	//Uart1 output mailbox number
 #define PID_IDLE		0	//process id Idle
 #define PID_UART		4	//process id Uart
 #define PRIORITY_3		3	//priority 3
@@ -39,24 +42,45 @@ PCB* PRIORITY_LIST[PRIORITY_LIST_SIZE] = {NULL, NULL, NULL, NULL, NULL, NULL};
 // RUNNING Pcb
 volatile PCB* RUNNING = NULL;
 
+volatile char Ns = 0;
+volatile char Nr = 0;
+volatile frame privious_frame = NULL;
+volatile frame current_frame = NULL;
+
 // function of idle process
 void process_IDLE()
 {
 	while (1);
 }
 
-// Uart output process
+// Uart0 output process
 void process_UART0_OUTPUT()
 {
 	int msg = 0;
 	int size = sizeof(msg);
 	int sender;// null_sender, null_msg, null_size;
-	Bind(UART_OUTPUT_MBX); // bind mailbox
+	Bind(UART0_OUTPUT_MBX); // bind mailbox
 
 	while (TRUE) // keep checking mailbox
 	{
-		Receive(UART_OUTPUT_MBX, &sender, &msg, &size); // get message
-		OutputData((char*)&msg, sizeof(msg)); // output message
+		Receive(UART0_OUTPUT_MBX, &sender, &msg, &size); // get message
+		OutputData((char*)&msg, sizeof(msg), UART0); // output message
+	}
+
+}
+
+// Uart1 output process
+void process_UART1_OUTPUT()
+{
+	frame* msg = NULL;
+	int size = sizeof(msg);
+	int sender;// null_sender, null_msg, null_size;
+	Bind(UART1_OUTPUT_MBX); // bind mailbox
+
+	while (TRUE) // keep checking mailbox
+	{
+		Receive(UART0_OUTPUT_MBX, &sender, &msg, &size); // get message
+		OutputData(msg->frm, msg->length, UART1); // output message
 	}
 
 }
@@ -169,6 +193,25 @@ unsigned long get_SP()
 	return 0;
 }
 
+// Function to encode message to packet, encode packet to frame, send frame and wait for ack
+void SentMessage(int msg_len, Message* msg, int locomotive)
+{
+	// encode to packet
+	packet pkt;
+	EncodeMsgToPacket((char*)&msg, msg_len, &pkt);
+
+	// encode to current frame
+	privious_frame = current_frame; // save last frame
+	EncodePacketToFrame(&pkt, &current_frame);
+
+	// send frame
+	int sz = sizeof(&current_frame);
+	Send(UART1_OUTPUT_MBX, locomotive, &current_frame, &sz); // output message
+
+	// wait ack
+}
+
+// function to run the program
 int Run_machine(program* prog, int locomotive)
 {
 	/* Follows instructions in supplied program (the route) */
@@ -178,12 +221,13 @@ int Run_machine(program* prog, int locomotive)
 	// Frame previous_frame;
 
 	pc = 0;
-	while (pc < prog->length && pc < MAXSIZE && prog->action[pc] != END)
+	while (pc < prog->length && pc < PROGRAM_MAXSIZE && prog->action[pc] != END)
 	{
-		printf("%d: ", pc);
+		//printf("%d: ", pc);
 		switch (prog->action[pc])
 		{
 		case GO: /* Go to HS# to dir and spd */
+		{
 			printf("GO: ");
 			pc++;
 			curr_dir = prog->action[pc++];		
@@ -198,8 +242,7 @@ int Run_machine(program* prog, int locomotive)
 			Message msg = { LOCOMOTIVE_CONTROLER, locomotive};
 			memcpy(&msg.arg2,&speed, sizeof(msg.arg2));
 
-			// encode to packet
-
+			SentMessage(TWO_ARGS, &msg, locomotive);
 
 			while (TRUE)
 			{
@@ -223,24 +266,31 @@ int Run_machine(program* prog, int locomotive)
 			}
 
 			break;
+		}
 		case SWITCH: /* Throw specific switch */
+		{
 			printf("SWITCH: ");
 			pc++;
 			printf("Switch: %d %s\n", prog->action[pc++],
 				prog->action[pc] ? "STRAIGHT" : "DIVERGED");
 			break;
+		}
 		case HALT: /* Halt the train */
+		{
 			printf("HALT\n");
 			curr_spd = 0;
 			printf("Speed to zero\n");
 			break;
+		}
 		case PAUSE: /* Pause the train for # second */
+		{
 			printf("PAUSE\n");
 			pc++;
 			printf("Speed to zero\n");
 			printf("Wait for %d seconds\n", prog->action[pc]);
 			printf("Set speed to: %d\n", curr_spd);
 			break;
+		}
 		default:
 			printf("Unknown inst at pc: %d", pc);
 		}
@@ -253,6 +303,7 @@ int Run_machine(program* prog, int locomotive)
 
 void Train_1_Application_Process()
 {
+	int a = sizeof(control);
 	int mbx = Bind(LOCOMOTIVE_1); // bind mailbox
 
 	// create route

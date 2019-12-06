@@ -8,7 +8,7 @@
 #ifndef APPLICATIONLAYER_H_
 #define APPLICATIONLAYER_H_
 
-#define MAXSIZE			32	/* Maximum program length */
+#define PROGRAM_MAXSIZE	32	/* Maximum program length */
 #define LOCOMOTIVE_1	1	/* Locomotive # 1*/
 #define TRUE    1
 #define FALSE   0
@@ -53,7 +53,7 @@ typedef struct
 typedef struct 
 {
 	int length; /* # of actions in program */
-	char action[MAXSIZE];
+	char action[PROGRAM_MAXSIZE];
 }program;
 
 #endif /* APPLICATIONLAYER_H_ */

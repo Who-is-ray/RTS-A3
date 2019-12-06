@@ -8,15 +8,24 @@
 #ifndef DATALINKLAYER_H_
 #define DATALINKLAYER_H_
 
+#define PACKET_MAXSIZE		5	// Max size of packet
+
 enum PktType { DATA, ACK, NACK };
 
-struct control
+typedef struct 
 {
-	unsigned nr : 3;
-	unsigned ns : 3;
+	unsigned char nr : 3;
+	unsigned char ns : 3;
 	enum PktType type : 2;
-};
+}control;
 
-void EncodeMsgToPacket(Message* msg, int length);
+// stucture of packet
+typedef struct
+{
+	int size; // size of packet
+	char pkt[PACKET_MAXSIZE]; // packet data
+}packet;
+
+void EncodeMsgToPacket(char* msg, int length, packet* pkt);
 
 #endif /* DATALINKLAYER_H_ */
