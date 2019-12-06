@@ -7,14 +7,13 @@
 
 #include "ApplicationLayer.h"
 
-void GenerateMessages(program* prog, int route)
+int GenerateMessages(program* prog, int route, Message_QueueItem* head)
 {
 	/* Follows instructions in supplied program (the route) */
 	unsigned int pc;
 	unsigned int curr_spd = 0, curr_dir = CW;
 
 	pc = 0;
-	printf("\nStart of program\nRoute %d\n", route);
 	while (pc < prog->length && pc < MAXSIZE && prog->action[pc] != END)
 	{
 		printf("%d: ", pc);
@@ -52,4 +51,6 @@ void GenerateMessages(program* prog, int route)
 		pc++;
 	}
 	printf("End of program\n");
+
+	return TRUE;
 }

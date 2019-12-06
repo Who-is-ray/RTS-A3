@@ -22,14 +22,8 @@
 #define PSR_INITIAL_VAL		0x01000000 // PSR initial value
 #define INITIAL_STACK_TOP_OFFSET    960 //stack top offset of stack pointer
 #define UART_OUTPUT_MBX	20 //Uart output mailbox number
-#define	PID_1		1 //process id 1
-#define PID_2		2 //process id 2
-#define PID_3		3 //process id 3
-#define PID_IDLE	0 //process id Idle
-#define PID_UART	4 //process id Uart
-#define PROCESS_1_MBX	1  //process mailbox 1
-#define PROCESS_2_MBX	2  //process mailbox 2
-#define PROCESS_3_MBX	3  //process mailbox 3
+#define PID_IDLE		0 //process id Idle
+#define PID_UART		4 //process id Uart
 #define PRIORITY_3		3  //priority 3
 #define PRIORITY_4		4  //priority 4
 #define PRIORITY_UART	5  //priority Idle
@@ -172,226 +166,35 @@ unsigned long get_SP()
 	return 0;
 }
 
-/// Testing
-//#define TEST_NICE
-//#define TEST_TERMINATION
-#define TEST_BIND_SEND_RECEIVE
-//#define TEST_BLOCK_UNBLOCK
-
-#ifdef TEST_NICE // Testing of Nice
-
-void process_1()
+void Train_1_Application_Process()
 {
-	int mbx = Bind(PROCESS_1_MBX); // bind mailbox
-	int msg = 'x';
-	int size = sizeof(msg);
-	unsigned int i;
-	for (i = 0; i < 500; i++)
+	int mbx = Bind(LOCOMOTIVE_1); // bind mailbox
+	Message_QueueItem* first_msg = NULL; // create message queue head
+
+	// create route
+	program route1 = { 13,
+	GO, CW, 4, 3, /* Go CW @ speed 4 to HS#3 */
+	HALT,
+	SWITCH, 0, DIVERGED, /* Switch '0' to diverged */
+	GO, CW, 2, 21,
+	END };
+
+	// convert program to message queue
+	if (GenerateMessages(&route1, LOCOMOTIVE_1, &first_msg)) // if success
 	{
-		Send(UART_OUTPUT_MBX, mbx, &msg, &size); // output message
+
 	}
-	Nice(PRIORITY_4); // increase priority to 4
-	for (i = 0; i < 500; i++)
+	else // if failed
 	{
-		Send(UART_OUTPUT_MBX, mbx, &msg, &size); // output message
-	}
-	Nice(PRIORITY_3); // change priority back to 3
-	while (TRUE)
-	{
-		Send(UART_OUTPUT_MBX, mbx, &msg, &size); // output message
+
 	}
 }
 
-void process_2()
-{
-	int mbx = Bind(PROCESS_2_MBX); // bind mailbox
-	int msg = 'y';
-	int size = sizeof(msg);
-	while (TRUE)
-	{
-		Send(UART_OUTPUT_MBX, mbx, &msg, &size); // output message
-	}
-}
-
-void process_3()
-{
-	int mbx = Bind(PROCESS_3_MBX); // bind mailbox
-	int msg = 'z';
-	int size = sizeof(msg);
-	while (TRUE)
-	{
-		Send(UART_OUTPUT_MBX, mbx, &msg, &size); // output message
-	}
-}
-
-#endif // TEST_NICE
-
-
-#ifdef TEST_TERMINATION // Testing of Nice
-
-void process_1()
-{
-	int mbx = Bind(PROCESS_1_MBX); // bind mailbox
-	int msg = 'x';
-	int size = sizeof(msg);
-	unsigned int i;
-	for (i = 0; i < 500; i++)
-	{
-		Send(UART_OUTPUT_MBX, mbx, &msg, &size); // output message
-	}
-	i++;
-}
-
-void process_2()
-{
-	int mbx = Bind(PROCESS_2_MBX); // bind mailbox
-	int msg = 'y';
-	int size = sizeof(msg);
-	unsigned int i;
-	for (i = 0; i < 1000; i++)
-	{
-		Send(UART_OUTPUT_MBX, mbx, &msg, &size); // output message
-	}
-	i++;
-}
-
-void process_3()
-{
-	int mbx = Bind(PROCESS_3_MBX); // bind mailbox
-	int msg = 'z';
-	int size = sizeof(msg);
-	while (TRUE)
-	{
-		Send(UART_OUTPUT_MBX, mbx, &msg, &size); // output message
-	}
-}
-
-#endif // TEST_TERMINATION
-
-#ifdef TEST_BIND_SEND_RECEIVE
-
-void process_1()
-{
-	int mbx = Bind(PROCESS_1_MBX); // bind mailbox
-	int msg = 'x';
-	int size = sizeof(msg);
-	unsigned int i;
-	for (i = 0; i < 1500; i++)
-	{
-		Send(UART_OUTPUT_MBX, mbx, &msg, &size); // output message
-	}
-	char msg_rec;
-	int size_rec = sizeof(msg_rec);
-	int sender;
-	Receive(ANYMAILBOX, &sender, &msg_rec, &size_rec); // receive message
-	Send(UART_OUTPUT_MBX, mbx, &msg_rec, &size_rec); // output message
-	Receive(ANYMAILBOX, &sender, &msg_rec, &size_rec); // receive message
-	Send(UART_OUTPUT_MBX, mbx, &msg_rec, &size_rec); // output message
-	Receive(ANYMAILBOX, &sender, &msg_rec, &size_rec); // receive message
-	Send(UART_OUTPUT_MBX, mbx, &msg_rec, &size_rec); // output message
-
-	while (TRUE)
-	{
-        Send(UART_OUTPUT_MBX, mbx, &msg, &size); // output message
-	}
-}
-
-void process_2()
-{
-	int mbx = Bind(PROCESS_2_MBX); // bind mailbox
-	int msg = 'y';
-	int size = sizeof(msg);
-	int i;
-	for (i = 0; i < 500; i++)
-	{
-		Send(UART_OUTPUT_MBX, mbx, &msg, &size); // output message
-	}
-	char msg_send = 'A';
-	int size_send = sizeof(msg_send);
-	Send(PROCESS_1_MBX, mbx, &msg_send, &size_send); // send message to process 1
-	msg_send = 'B';
-	Send(PROCESS_1_MBX, mbx, &msg_send, &size_send); // send message to process 1
-	msg_send = 'C';
-	Send(PROCESS_1_MBX, mbx, &msg_send, &size_send); // send message to process 1
-	while (TRUE)
-	{
-		Send(UART_OUTPUT_MBX, mbx, &msg, &size); // output message
-	}
-}
-
-void process_3()
-{
-	int mbx = Bind(PROCESS_3_MBX); // bind mailbox
-	int msg = 'z';
-	int size = sizeof(msg);
-	while (TRUE)
-	{
-		Send(UART_OUTPUT_MBX, mbx, &msg, &size);
-	}
-}
-
-#endif // TEST_BIND_SEND_RECEIVE
-
-#ifdef TEST_BLOCK_UNBLOCK
-
-void process_1()
-{
-	int mbx = Bind(PROCESS_1_MBX); // bind mailbox
-	int msg = 'x';
-	int size = sizeof(msg);
-	unsigned int i;
-	for (i = 0; i < 200; i++)
-	{
-		Send(UART_OUTPUT_MBX, mbx, &msg, &size); // output message
-	}
-	char msg_recv;
-	int size_recv = sizeof(msg_recv);
-	int sender;	
-	Receive(ANYMAILBOX, &sender, &msg_recv, &size_recv); // check receive message
-	while (TRUE)
-	{
-		Send(UART_OUTPUT_MBX, mbx, &msg, &size); // output message
-	}
-}
-
-void process_2()
-{
-	int mbx = Bind(PROCESS_2_MBX); // bind mailbox
-	int msg = 'y';
-	int size = sizeof(msg);
-	int i;
-	for (i = 0; i < 20000; i++)
-	{
-		Send(UART_OUTPUT_MBX, mbx, &msg, &size); // output message
-	}
-	char msg_send = 'A';
-	int size_send = sizeof(msg_send);
-	Send(PROCESS_1_MBX, mbx, &msg_send, &size_send); // send message to process 1
-	while (TRUE)
-	{
-		Send(UART_OUTPUT_MBX, mbx, &msg, &size); // output message
-	}
-}
-
-void process_3()
-{
-	int mbx = Bind(PROCESS_3_MBX); // bind mailbox
-	int msg = 'z';
-	int size = sizeof(msg);
-	while (TRUE)
-	{
-		Send(UART_OUTPUT_MBX, mbx, &msg, &size); // output message
-	}
-}
-
-#endif // TEST_BLOCK_UNBLOCK
 
 // Initialize all processes and force switch to thread mode
 void Initialize_Process()
 {
 	reg_process(process_IDLE, PID_IDLE, PRIORITY_IDLE); // register idle process
-	reg_process(process_1, PID_1, PRIORITY_3); // register process 1
-	reg_process(process_2, PID_2, PRIORITY_3); // register process 1
-	reg_process(process_3, PID_3, PRIORITY_3); // register process 1
+	reg_process(Train_1_Application_Process, LOCOMOTIVE_1, PRIORITY_3); // register process 1
 	reg_process(process_UART0_OUTPUT, PID_UART, PRIORITY_UART); // fegister uart output process
 }

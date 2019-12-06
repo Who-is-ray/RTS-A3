@@ -5,7 +5,7 @@
  *Course: Real time system
  *Professor: Larry Hughes
  *Purpose: This is main function of the code, it calls the functions in specific sequence.
- *		   This assignment is to simulate a multi-porcess mechine that allow each process 
+ *		   This assignment is to simulate a multi-porcess mechine that allow each process
  *		   to change their priority, to terminate, to send and receive messages.
  *		   Running process can be switched in certain period (1/100 sec in this assignment)
  *		   depend on their priority. Higher priority process will always block lower priority
