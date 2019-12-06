@@ -100,7 +100,6 @@ void UART0_IntHandler(void)
 	{
 		/* RECV done - clear interrupt and make char available to application */
 		UART0_ICR_R |= UART_INT_RX;
-		EnQueueIO(INPUT, UART, UART0_DR_R);
 	}
 
 	if (UART0_MIS_R & UART_INT_TX)
@@ -109,7 +108,7 @@ void UART0_IntHandler(void)
 		UART0_ICR_R |= UART_INT_TX;
 
 		char data;
-		if (DeQueueIO(OUTPUT, UART, &data)) // if output queue is not empty
+		if (DeQueueIO(UART0, UART, &data)) // if output queue is not empty
 			UART0_DR_R = data;  // transmit next data
 		else // if output queue is empty
 			UART_STATUS = IDLE; // idle
@@ -138,7 +137,8 @@ void UART1_IntHandler(void)
 	{
 		/* RECV done - clear interrupt and make char available to application */
 		UART1_ICR_R |= UART_INT_RX;
-		// EnQueueIO(INPUT, UART, UART0_DR_R);
+
+		// check received message
 	}
 
 	if (UART1_MIS_R & UART_INT_TX)
@@ -146,11 +146,11 @@ void UART1_IntHandler(void)
 		/* XMIT done - clear interrupt */
 		UART1_ICR_R |= UART_INT_TX;
 
-		//char data;
-		//if (DeQueueIO(OUTPUT, UART, &data)) // if output queue is not empty
-		//	UART1_DR_R = data;  // transmit next data
-		//else // if output queue is empty
-		//	UART_STATUS = IDLE; // idle
+		char data;
+		if (DeQueueIO(UART1, UART, &data)) // if output queue is not empty
+			UART1_DR_R = data;  // transmit next data
+		else // if output queue is empty
+			UART_STATUS = IDLE; // idle
 	}
 }
 

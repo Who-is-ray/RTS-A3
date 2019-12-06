@@ -21,9 +21,8 @@ void EncodeMsgToPacket(char* msg, int length, packet* pkt)
 	pkt->size = length + PACKET_SIZE_OFFSET;
 
 	// set control
-	((control*)pkt->pkt[CONTROL])->type = DATA;
-	((control*)pkt->pkt[CONTROL])->ns = Ns;
-	((control*)pkt->pkt[CONTROL])->nr = Nr;
+	control ctl = { Nr,Ns,DATA };
+	memcpy(&pkt->pkt[CONTROL], &ctl, sizeof(control));
 
 	// set lenght
 	pkt->pkt[LENGTH] = length;

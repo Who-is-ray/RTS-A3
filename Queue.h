@@ -28,19 +28,12 @@ typedef enum
 
 /* The type of queue
  * Only two queues exist
- * Input queue and output queue*/
-typedef enum
-{
-    INPUT,
-    OUTPUT
-} QueueType;
-
-/*Id of uart*/
-enum Uart_id 
+ * uart0 queue and uart1 queue*/
+typedef enum 
 { 
 	UART0, 
 	UART1 
-};
+} UartId;
 
 /* Structure of data in queue
  * include Source of data and value of data
@@ -61,7 +54,7 @@ typedef struct
 } Queue;
 
 void Queue_Init();  // Initialize input queue and output queue by setting the head and tail to 0
-int EnQueueIO(QueueType t, Source s, char v);   //Enqueue a character to selected queue
-int DeQueueIO(QueueType t, Source* s, char* v);  //Dequeue a character from selected queue
+int EnQueueIO(UartId t, Source s, char v);   //Enqueue a character to selected queue
+int DeQueueIO(UartId t, Source* s, char* v);  //Dequeue a character from selected queue
 void OutputData(char* s, int size, int uart_id); // Function to output data
 #endif /* QUEUE_H_ */

@@ -27,14 +27,15 @@
 #define UART0_OUTPUT_MBX	20	//Uart0 output mailbox number
 #define UART1_OUTPUT_MBX	21	//Uart1 output mailbox number
 #define PID_IDLE		0	//process id Idle
-#define PID_UART		4	//process id Uart
+#define PID_UART0		4	//process id Uart0
+#define PID_UART1       5   //process id Uart1
 #define PRIORITY_3		3	//priority 3
 #define PRIORITY_4		4	//priority 4
 #define PRIORITY_UART	5	//priority Idle
 #define PRIORITY_IDLE	0	//priority Uart
-#define TWO_ARGS		2	//two arguments
-#define ONE_ARG			1	//one argument
-#define NO_ARG			0	//no argument
+#define TWO_ARGS		3	//two arguments message length
+#define ONE_ARG			2	//one argument message length
+#define NO_ARG			1	//no argument message length
 
 // create and initialize priority list
 PCB* PRIORITY_LIST[PRIORITY_LIST_SIZE] = {NULL, NULL, NULL, NULL, NULL, NULL};
@@ -44,8 +45,8 @@ volatile PCB* RUNNING = NULL;
 
 volatile char Ns = 0;
 volatile char Nr = 0;
-volatile frame privious_frame = NULL;
-volatile frame current_frame = NULL;
+frame privious_frame;
+frame current_frame;
 
 // function of idle process
 void process_IDLE()
@@ -79,7 +80,7 @@ void process_UART1_OUTPUT()
 
 	while (TRUE) // keep checking mailbox
 	{
-		Receive(UART0_OUTPUT_MBX, &sender, &msg, &size); // get message
+		Receive(UART1_OUTPUT_MBX, &sender, &msg, &size); // get message
 		OutputData(msg->frm, msg->length, UART1); // output message
 	}
 
@@ -198,17 +199,19 @@ void SentMessage(int msg_len, Message* msg, int locomotive)
 {
 	// encode to packet
 	packet pkt;
-	EncodeMsgToPacket((char*)&msg, msg_len, &pkt);
+	EncodeMsgToPacket((char*)msg, msg_len, &pkt);
 
 	// encode to current frame
 	privious_frame = current_frame; // save last frame
 	EncodePacketToFrame(&pkt, &current_frame);
 
 	// send frame
+	frame* to_send = &current_frame;
 	int sz = sizeof(&current_frame);
-	Send(UART1_OUTPUT_MBX, locomotive, &current_frame, &sz); // output message
+	Send(UART1_OUTPUT_MBX, locomotive, &to_send, &sz); // output message
 
 	// wait ack
+
 }
 
 // function to run the program
@@ -217,13 +220,11 @@ int Run_machine(program* prog, int locomotive)
 	/* Follows instructions in supplied program (the route) */
 	unsigned int pc;
 	unsigned int curr_spd = NULL, curr_dir = CW, destination = NULL;
-	// Frame current_frame;
-	// Frame previous_frame;
 
 	pc = 0;
 	while (pc < prog->length && pc < PROGRAM_MAXSIZE && prog->action[pc] != END)
 	{
-		//printf("%d: ", pc);
+		printf("%d: ", prog->action[pc]);
 		switch (prog->action[pc])
 		{
 		case GO: /* Go to HS# to dir and spd */
@@ -303,7 +304,6 @@ int Run_machine(program* prog, int locomotive)
 
 void Train_1_Application_Process()
 {
-	int a = sizeof(control);
 	int mbx = Bind(LOCOMOTIVE_1); // bind mailbox
 
 	// create route
@@ -335,5 +335,6 @@ void Initialize_Process()
 {
 	reg_process(process_IDLE, PID_IDLE, PRIORITY_IDLE); // register idle process
 	reg_process(Train_1_Application_Process, LOCOMOTIVE_1, PRIORITY_3); // register process 1
-	reg_process(process_UART0_OUTPUT, PID_UART, PRIORITY_UART); // fegister uart output process
+    reg_process(process_UART0_OUTPUT, PID_UART0, PRIORITY_UART); // fegister uart output process
+    reg_process(process_UART1_OUTPUT, PID_UART1, PRIORITY_UART); // fegister uart output process
 }
