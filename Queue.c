@@ -71,7 +71,7 @@ int EnQueueIO(UartId t, Source s, char v)
             head = OutQ_UART1.Head;
             if(((head+1) & QSM1) != OutQ_UART1.Tail)  // if not full
             {
-                UART0_IntDisable(UART_INT_TX); // disable UART transmit interrupt
+                UART1_IntDisable(UART_INT_TX); // disable UART transmit interrupt
 
                 if(UART1_STATUS == BUSY) // if uart is busy
                 {
@@ -89,7 +89,7 @@ int EnQueueIO(UartId t, Source s, char v)
 						UART1_DR_R = v;
 
                 }
-                UART0_IntEnable(UART_INT_TX); // enable UART transmit interrupt
+                UART1_IntEnable(UART_INT_TX); // enable UART transmit interrupt
                 return TRUE;
             }
             break;
