@@ -12,14 +12,19 @@
  */
 
 #include "Systick.h"
-#include "Process.h"
+#include "PKCall.h"
 #include "Queue.h"
 #include "Uart.h"
 
+
 #define NVIC_INT_CTRL_R (*((volatile unsigned long *) 0xE000ED04))
 #define TRIGGER_PENDSV 0x10000000
+#define RESEND_CYCLE	50 //resend every 50 timecycle
 
 volatile int PENDSV_ON;
+extern int RESEND_COUNTING;
+extern int RESEND_MBX; // MAILBOX to receive resend notice from systick
+int counting_time = 0;
 
 void SysTickStart(void)
 {
@@ -55,6 +60,17 @@ void SysTickIntDisable(void)
 
 void SysTickHandler(void)
 {
+	if (RESEND_COUNTING)
+		counting_time++;
+	if (counting_time >= RESEND_CYCLE)
+	{
+		RESEND_COUNTING = FALSE;
+		counting_time = 0;
+		int msg = NULL;
+		int sz = sizeof(msg);
+		Send(RESEND_MBX, SYSTICK_MBX, &msg, &sz);
+	}
+
     if (PENDSV_ON == FALSE)
         NVIC_INT_CTRL_R |= TRIGGER_PENDSV;// Process switch, trigger PendSV after this function
 }

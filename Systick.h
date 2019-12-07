@@ -36,6 +36,8 @@
 #define NUM_OF_MON          12          // number of month
 #define NUM_TYPE_OF_MON     2           // leap year month and normal year month
 
+#define SYSTICK_MBX	-3	//systick mailbox number, systick will not receive any mail and will not bind to anymailbox
+
 typedef struct {
     int t_sec,  //1/10 of second
         sec,    // second

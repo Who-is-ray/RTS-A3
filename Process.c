@@ -11,6 +11,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include "Systick.h"
 #include "Queue.h"
 #include "process.h"
 #include "KernelCall.h"
@@ -42,10 +43,19 @@ PCB* PRIORITY_LIST[PRIORITY_LIST_SIZE] = {NULL, NULL, NULL, NULL, NULL, NULL};
 // RUNNING Pcb
 volatile PCB* RUNNING = NULL;
 
-volatile char Ns = 0;
-volatile char Nr = 0;
+int RESEND_COUNTING = FALSE; // flag for systick to count for resend
+int RESEND_MBX; // MAILBOX to receive resend notice from systick
+
+volatile char Ns = 0; // receive seq #
+volatile char Nr = 0; // send seq #
 frame privious_frame;
 frame current_frame;
+
+typedef struct
+{
+	PktType type;
+	Message* msg;
+}received_msg;
 
 // function of idle process
 void process_IDLE()
@@ -66,7 +76,6 @@ void process_UART0_OUTPUT()
 		Receive(UART0_OUTPUT_MBX, &sender, &msg, &size); // get message
 		OutputData((char*)&msg, sizeof(msg), UART0); // output message
 	}
-
 }
 
 // Uart1 output process
@@ -198,6 +207,41 @@ unsigned long get_SP()
 	return 0;
 }
 
+void SendFrame(frame* to_send, int locomotive)
+{
+	int sz = sizeof(&current_frame);
+	Send(UART1_OUTPUT_MBX, locomotive, &to_send, &sz); // output message
+	Ns++; // update Ns
+
+	// Notice Systick
+	RESEND_COUNTING = TRUE;
+	RESEND_MBX = locomotive;
+
+	// wait ack
+	int sender;
+	received_msg* rec_msg;
+	int sz_msg = sizeof(rec_msg);
+	int rec_ack = FALSE;
+	while (!rec_ack)
+	{
+		Receive(locomotive, &sender, &rec_msg, &sz_msg);
+		if (sender == RECEIVED_PORCESSOR_MBX) // if received message from trainset
+		{
+			if (rec_msg->type == ACK) // if received ack
+				rec_ack = TRUE;
+		}
+
+		else if (sender == SYSTICK_MBX) // if time to resend
+		{
+			//resend message
+			RESEND_COUNTING = TRUE;
+			Send(UART1_OUTPUT_MBX, locomotive, &to_send, &sz); // output message
+		}
+
+		free(rec_msg);
+	}
+}
+
 // Function to encode message to packet, encode packet to frame, send frame and wait for ack
 void SentMessage(int msg_len, Message* msg, int locomotive)
 {
@@ -211,12 +255,7 @@ void SentMessage(int msg_len, Message* msg, int locomotive)
 
 	// send frame
 	frame* to_send = &current_frame;
-	int sz = sizeof(&current_frame);
-	Send(UART1_OUTPUT_MBX, locomotive, &to_send, &sz); // output message
-	Ns++; // update Ns
-
-	// wait ack
-
+	SendFrame(to_send, locomotive);
 }
 
 // function to run the program
@@ -245,29 +284,29 @@ int Run_machine(program* prog, int locomotive)
 
 			SentMessage(TWO_ARGS, &msg, locomotive);
 
-			int msg_rec = '2';
-			int size_rec = sizeof(msg_rec);
-			Send(UART0_OUTPUT_MBX, locomotive, &msg_rec, &size_rec);
+			//int msg_rec = '2';
+			//int size_rec = sizeof(msg_rec);
+			//Send(UART0_OUTPUT_MBX, locomotive, &msg_rec, &size_rec);
 
-			while (TRUE)
+			int arrive_destination = FALSE;
+			while (!arrive_destination)
 			{
-				int hole_sensor = NULL;
-				int sz = sizeof(hole_sensor);
+				received_msg* hs_msg = NULL;
+				int sz = sizeof(hs_msg);
 				int sender;
-				Receive(locomotive, &sender, &hole_sensor, &sz); // receive message
+				Receive(locomotive, &sender, &hs_msg, &sz); // receive message
 
 				if (sender == RECEIVED_PORCESSOR_MBX) // if reached a hole sensor
 				{
-					// send acknowledgement
-
-					if (hole_sensor == destination) // if reached destination
-						break;
+					if (hs_msg->msg->code == HOLESENSOR_TRAINSET) // if is hole sensor message
+					{
+						if (hs_msg->msg->arg1 == destination) // if arrive destination
+						{
+							arrive_destination = TRUE;
+						}
+					}
 				}
-				//else if (sender == ) // if haven't received acknowledgement in time cycle
-				//{
-				//	// Resend message
-
-				//}
+				free(hs_msg); // release memary
 			}
 
 			break;
@@ -336,8 +375,61 @@ void Received_Message_Processor()
 		// Varify checksum
 		if (DecodeFrameToPacket(received_frame, &pkt)) // if received packet is valid (checksum correct)
 		{
+			int type = ((int)pkt.pkt[CONTROL]) >> TYPE_SHIFT;
+			int nr = ((int)pkt.pkt[CONTROL]) & NR_AND;
 
+			if (type == DATA) // if received data
+			{
+				int ns = ((int)pkt.pkt[CONTROL]) >> NS_SHIFT;
+				if (ns == Nr) // if received correct message
+				{
+					Nr++; // update Nr
+
+					// send acknowledgement
+					frame* ack_frame = NULL;
+					int sz_ack = sizeof(ack_frame);
+					GetAckFrame(ack_frame, ACK);
+					Send(UART1_OUTPUT_MBX, RECEIVED_PORCESSOR_MBX, &ack_frame, &sz_ack); // send ack
+
+					// pass message to train process
+					received_msg* msg = (received_msg*)malloc(sizeof(received_msg)); // get message
+					msg->type = DATA; // type is data
+					msg->msg = (Message*)&(pkt.pkt[MESSAGE]); // take message address
+					int sz = sizeof(msg);
+					Send(LOCOMOTIVE_1, RECEIVED_PORCESSOR_MBX, &msg, &sz);
+
+				}
+				else if (ns == Nr+1) // if miss last message
+				{
+					// return NACK
+					frame* nack_frame = NULL;
+					int sz_nack = sizeof(nack_frame);
+					GetAckFrame(nack_frame, NACK);
+					Send(UART1_OUTPUT_MBX, RECEIVED_PORCESSOR_MBX, &nack_frame, &sz_nack); // send nack
+				}
+			}
+			else if(type == ACK) // if received ack
+			{
+				if (nr == Ns) // if received correct ack
+				{
+					received_msg* msg = (received_msg*)malloc(sizeof(received_msg));
+					msg->type = ACK;
+					msg->msg = NULL;
+					int sz = sizeof(msg);
+
+					// notice train process
+					Send(LOCOMOTIVE_1, RECEIVED_PORCESSOR_MBX, &msg, &sz);
+				}
+			}
+			else if(type == NACK) // if received nack
+			{
+				// resend last frame and current frame
+				SendFrame(&privious_frame, LOCOMOTIVE_1);
+				SendFrame(&current_frame, LOCOMOTIVE_1);
+			}
 		}
+
+		free(received_frame); // release meemory
 	}
 }
 

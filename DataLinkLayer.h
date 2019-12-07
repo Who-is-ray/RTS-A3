@@ -9,14 +9,20 @@
 #define DATALINKLAYER_H_
 
 #define PACKET_MAXSIZE		5	// Max size of packet
+#define CONTROL	0	//position of control
+#define LENGTH	1	//position of length
+#define MESSAGE	2	//position of message
+#define TYPE_SHIFT	6	//shift right 6 bit to get type
+#define NS_SHIFT	3	//shift right 3 bit to get Ns
+#define NR_AND		0x11111000 //and this to  get Nr
 
-enum PktType { DATA, ACK, NACK };
+typedef enum { DATA, ACK, NACK }PktType;
 
 typedef struct 
 {
 	unsigned char nr : 3;
 	unsigned char ns : 3;
-	enum PktType type : 2;
+	PktType type : 2;
 }control;
 
 // stucture of packet
@@ -27,5 +33,7 @@ typedef struct
 }packet;
 
 void EncodeMsgToPacket(char* msg, int length, packet* pkt);
+
+void GetAckFrame(void* fm, PktType type);
 
 #endif /* DATALINKLAYER_H_ */

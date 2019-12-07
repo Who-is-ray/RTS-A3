@@ -14,6 +14,7 @@
 #define CHECKSUM_POS_END	2	//checksum at length-2 postion
 #define PACKET_POS	1 // position of packet in frame
 
+// Encode packet to frame
 void EncodePacketToFrame(void* pkt, frame* frm)
 {
 	packet* Pkt = (packet*)pkt;
@@ -28,13 +29,13 @@ void EncodePacketToFrame(void* pkt, frame* frm)
 	for (; i < Pkt->size + PACKET_POS + DLE_count; i++)
 	{
 	    char pkt_data = Pkt->pkt[i - DLE_count - PACKET_POS];
-	    if( pkt_data == STX || pkt_data == DLE || pkt_data == ETX)
+	    if( pkt_data == STX || pkt_data == DLE || pkt_data == ETX) // if is special byte
 	    {
 	        DLE_count++;
-	        frm->frm[i++] = DLE;
+	        frm->frm[i++] = DLE; // add DLE in front
 	    }
 
-		frm->frm[i] = pkt_data;
+		frm->frm[i] = pkt_data; // load byte to frame
 		checksum += pkt_data; // update check sum
 	}
 
@@ -48,6 +49,7 @@ void EncodePacketToFrame(void* pkt, frame* frm)
 	frm->length = i;
 }
 
+// Decode frame to packet
 int DecodeFrameToPacket(frame* frm, void* pkt)
 {
 	packet* Pkt = (packet*)pkt;

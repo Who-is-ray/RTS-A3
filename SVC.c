@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "Systick.h"
 #include "Uart.h"
 #include "KernelCall.h"
 #include "PKCall.h"
@@ -330,7 +331,7 @@ void SVCHandler(Stack *argptr)
 		{
 			SendMsgArgs* args = (SendMsgArgs*)kcaptr->Arg1; // get the argument
 
-			if (MAILBOXLIST[args->Sender].Owner == RUNNING) // if sender is valid or from special sender (UartISR, SystickISR)
+			if (MAILBOXLIST[args->Sender].Owner == RUNNING || args->Sender == SYSTICK_MBX || args->Sender == UART1_MBX) // if sender is valid or from special sender (UartISR, SystickISR)
 			{
 				PCB* recver = MAILBOXLIST[args->Recver].Owner;
 				if (recver != NULL) // if receiver is valid
