@@ -77,14 +77,14 @@ void process_UART1_OUTPUT()
 	int sender;// null_sender, null_msg, null_size;
 	Bind(UART1_OUTPUT_MBX); // bind mailbox
 
-    char m[8] = {0x02,0,0x03,0xe0,0x05,0x01,0xe9,0x03}; // switch 5 command text
+    //char m[8] = {0x02,0,0x03,0xe0,0x05,0x01,0xe9,0x03}; // switch 5 command text
 
 	while (TRUE) // keep checking mailbox
 	{
 		Receive(UART1_OUTPUT_MBX, &sender, &msg, &size); // get message
-		//OutputData(msg->frm, msg->length, UART1); // output message
+		OutputData(msg->frm, msg->length, UART1); // output message
 
-        OutputData(m, 8, UART1); // output switch 5 divert
+        //OutputData(m, 8, UART1); // output switch 5 divert
 
 	}
 
