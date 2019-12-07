@@ -75,7 +75,7 @@ void UART1_Init(void)
 
 	GPIO_PORTB_AFSEL_R = 0x3;        // Enable Receive and Transmit on PA1-0
 	GPIO_PORTB_PCTL_R = (0x01) | ((0x01) << 4);         // Enable UART RX/TX pins on PA1-0
-	GPIO_PORTB_DEN_R = EN_DIG_PA0 | EN_DIG_PA1;        // Enable Digital I/O on PA1-0
+	GPIO_PORTB_DEN_R = EN_DIG_PB0 | EN_DIG_PB1;        // Enable Digital I/O on PA1-0
 
 	UART1_CTL_R = UART_CTL_UARTEN;        // Enable the UART
 	wait = 0; // wait; give UART time to enable itself.
