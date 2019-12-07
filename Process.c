@@ -56,7 +56,7 @@ void process_IDLE()
 // Uart0 output process
 void process_UART0_OUTPUT()
 {
-	int msg = 0;
+	char msg = 0;
 	int size = sizeof(msg);
 	int sender;// null_sender, null_msg, null_size;
 	Bind(UART0_OUTPUT_MBX); // bind mailbox
@@ -243,6 +243,10 @@ int Run_machine(program* prog, int locomotive)
 			memcpy(&msg.arg2,&speed, sizeof(msg.arg2));
 
 			SentMessage(TWO_ARGS, &msg, locomotive);
+
+			char msg_rec = '2';
+			int size_rec = sizeof(msg_rec);
+			Send(UART0_OUTPUT_MBX, locomotive, &msg_rec, &size_rec);
 
 			while (TRUE)
 			{

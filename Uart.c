@@ -22,7 +22,8 @@
 #define ETX 0x03
 #define DLE 0x10
 
-volatile int UART_STATUS = IDLE;
+volatile int UART0_STATUS = IDLE;
+volatile int UART1_STATUS = IDLE;
 int DATA_COUNT = 0;
 int STX_RECEIVED = FALSE;
 int DLE_RECEIVED = FALSE;
@@ -123,7 +124,7 @@ void UART0_IntHandler(void)
 		if (DeQueueIO(UART0, UART, &data)) // if output queue is not empty
 			UART0_DR_R = data;  // transmit next data
 		else // if output queue is empty
-			UART_STATUS = IDLE; // idle
+			UART0_STATUS = IDLE; // idle
 	}
 }
 
@@ -151,7 +152,7 @@ void UART1_IntHandler(void)
 		UART1_ICR_R |= UART_INT_RX;
 
 		// check received message
-		char data = UART0_DR_R;
+		char data = UART1_DR_R;
 
 		if (data == STX && !STX_RECEIVED) // if received STX and not in recording
 		{
@@ -189,7 +190,7 @@ void UART1_IntHandler(void)
 		if (DeQueueIO(UART1, UART, &data)) // if output queue is not empty
 			UART1_DR_R = data;  // transmit next data
 		else // if output queue is empty
-			UART_STATUS = IDLE; // idle
+			UART1_STATUS = IDLE; // idle
 	}
 }
 

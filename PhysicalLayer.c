@@ -21,9 +21,16 @@ void EncodePacketToFrame(void* pkt, frame* frm)
 	frm->frm[i++] = STX;
 
 	// load packet
+	int DLE_count = 0;
 	for (; i < Pkt->size + 1; i++)
 	{
-		frm->frm[i] = Pkt->pkt[i - 1];
+	    if(Pkt->pkt[i - 1] == STX || Pkt->pkt[i - 1] == DLE ||Pkt->pkt[i - 1] == ETX)
+	    {
+	        DLE_count++;
+	        frm->frm[i++] = DLE;
+	    }
+
+		frm->frm[i-DLE_count] = Pkt->pkt[i - 1];
 		checksum += Pkt->pkt[i - 1]; // update check sum
 	}
 

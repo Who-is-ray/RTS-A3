@@ -18,7 +18,8 @@
 #define ETX 0x03
 #define DLE 0x10
 
-extern int UART_STATUS;
+extern int UART0_STATUS;
+extern int UART1_STATUS;
 
 Queue OutQ_UART0;
 Queue OutQ_UART1;
@@ -49,7 +50,7 @@ int EnQueueIO(UartId t, Source s, char v)
 			if (((head + 1) & QSM1) != OutQ_UART0.Tail)  // if not full
 			{
 				UART0_IntDisable(UART_INT_TX); // disable UART transmit interrupt
-				if (UART_STATUS == BUSY) // if uart is busy
+				if (UART0_STATUS == BUSY) // if uart is busy
 				{
 					// add to queue
 					AddToQueue(&OutQ_UART0, v);
@@ -57,7 +58,7 @@ int EnQueueIO(UartId t, Source s, char v)
 				else // uart not busy
 				{
 					// directly output, set to busy
-					UART_STATUS = BUSY;
+				    UART0_STATUS = BUSY;
 					UART0_DR_R = v;
 				}
 				UART0_IntEnable(UART_INT_TX); // enable UART transmit interrupt
@@ -72,7 +73,7 @@ int EnQueueIO(UartId t, Source s, char v)
             {
                 UART0_IntDisable(UART_INT_TX); // disable UART transmit interrupt
 
-                if(UART_STATUS == BUSY) // if uart is busy
+                if(UART1_STATUS == BUSY) // if uart is busy
                 {
 					if (v == STX || v == DLE || v == ETX) // if data is STX, DLE or ETX
 						AddToQueue(&OutQ_UART1, DLE); // add DLE to queue
@@ -82,20 +83,11 @@ int EnQueueIO(UartId t, Source s, char v)
 				}
                 else // uart not busy
                 {
-					if (v == STX || v == DLE || v == ETX) // if data is STX, DLE or ETX
-					{
-						AddToQueue(&OutQ_UART1, v);
 
-						// directly output DLE, set to busy
-						UART_STATUS = BUSY;
-						UART0_DR_R = DLE;
-					}
-					else
-					{
 						// directly output, set to busy
-						UART_STATUS = BUSY;
-						UART0_DR_R = v;
-					}
+                        UART1_STATUS = BUSY;
+						UART1_DR_R = v;
+
                 }
                 UART0_IntEnable(UART_INT_TX); // enable UART transmit interrupt
                 return TRUE;
