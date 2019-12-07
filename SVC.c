@@ -400,7 +400,10 @@ void PendSV_Handler()
 
 	// get next running process
 	if (UNBLOCK_PRIORITY > RUNNING->Priority) // if unblocked higher priority process
+	{
 		RUNNING = PRIORITY_LIST[UNBLOCK_PRIORITY]; // run unblocked process
+		UNBLOCK_PRIORITY = 0;
+	}
 	else
 		RUNNING = RUNNING->Next; // run next
 

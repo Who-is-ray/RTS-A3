@@ -56,7 +56,7 @@ void process_IDLE()
 // Uart0 output process
 void process_UART0_OUTPUT()
 {
-	char msg = 0;
+	int msg = 0;
 	int size = sizeof(msg);
 	int sender;// null_sender, null_msg, null_size;
 	Bind(UART0_OUTPUT_MBX); // bind mailbox
@@ -82,7 +82,7 @@ void process_UART1_OUTPUT()
 	while (TRUE) // keep checking mailbox
 	{
 		Receive(UART1_OUTPUT_MBX, &sender, &msg, &size); // get message
-		OutputData(msg->frm, msg->length, UART1); // output message
+		//OutputData(msg->frm, msg->length, UART1); // output message
 
         //OutputData(m, 8, UART1); // output switch 5 divert
 
@@ -229,19 +229,19 @@ int Run_machine(program* prog, int locomotive)
 	pc = 0;
 	while (pc < prog->length && pc < PROGRAM_MAXSIZE && prog->action[pc] != END)
 	{
-		printf("%d: ", prog->action[pc]);
+		//printf("%d: ", prog->action[pc]);
 		switch (prog->action[pc])
 		{
 		case GO: /* Go to HS# to dir and spd */
 		{
-			printf("GO: ");
+			//printf("GO: ");
 			pc++;
 			curr_dir = prog->action[pc++];		
 			curr_spd = prog->action[pc++];
 			destination = prog->action[pc];
 
-			printf("Direction: %s Speed: %d HS: %d\n",
-				curr_dir == CW ? "CW" : "CCW", curr_spd, destination);
+			//printf("Direction: %s Speed: %d HS: %d\n",
+				//curr_dir == CW ? "CW" : "CCW", curr_spd, destination);
 
 			//create message
 			mag_dir speed = { curr_spd, IGNORED, curr_dir };
@@ -250,8 +250,9 @@ int Run_machine(program* prog, int locomotive)
 
 			SentMessage(TWO_ARGS, &msg, locomotive);
 
-			char msg_rec = '2';
+			int msg_rec = '2';
 			int size_rec = sizeof(msg_rec);
+			//OutputData((char*)&msg_rec, sizeof(size_rec), UART0); // output message
 			Send(UART0_OUTPUT_MBX, locomotive, &msg_rec, &size_rec);
 
 			while (TRUE)
@@ -277,36 +278,36 @@ int Run_machine(program* prog, int locomotive)
 
 			break;
 		}
-		case SWITCH: /* Throw specific switch */
-		{
-			printf("SWITCH: ");
-			pc++;
-			printf("Switch: %d %s\n", prog->action[pc++],
-				prog->action[pc] ? "STRAIGHT" : "DIVERGED");
-			break;
-		}
-		case HALT: /* Halt the train */
-		{
-			printf("HALT\n");
-			curr_spd = 0;
-			printf("Speed to zero\n");
-			break;
-		}
-		case PAUSE: /* Pause the train for # second */
-		{
-			printf("PAUSE\n");
-			pc++;
-			printf("Speed to zero\n");
-			printf("Wait for %d seconds\n", prog->action[pc]);
-			printf("Set speed to: %d\n", curr_spd);
-			break;
-		}
-		default:
-			printf("Unknown inst at pc: %d", pc);
+		//case SWITCH: /* Throw specific switch */
+		//{
+		//	printf("SWITCH: ");
+		//	pc++;
+		//	printf("Switch: %d %s\n", prog->action[pc++],
+		//		prog->action[pc] ? "STRAIGHT" : "DIVERGED");
+		//	break;
+		//}
+		//case HALT: /* Halt the train */
+		//{
+		//	printf("HALT\n");
+		//	curr_spd = 0;
+		//	printf("Speed to zero\n");
+		//	break;
+		//}
+		//case PAUSE: /* Pause the train for # second */
+		//{
+		//	printf("PAUSE\n");
+		//	pc++;
+		//	printf("Speed to zero\n");
+		//	printf("Wait for %d seconds\n", prog->action[pc]);
+		//	printf("Set speed to: %d\n", curr_spd);
+		//	break;
+		//}
+		//default:
+		//	printf("Unknown inst at pc: %d", pc);
 		}
 		pc++;
 	}
-	printf("End of program\n");
+	//printf("End of program\n");
 
 	return TRUE;
 }
