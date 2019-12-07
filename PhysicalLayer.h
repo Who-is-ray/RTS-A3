@@ -8,7 +8,7 @@
 #ifndef PHYSICALLAYER_H_
 #define PHYSICALLAYER_H_
 
-#define FRAME_MAXSIZE 8
+#define FRAME_MAXSIZE 13
 
 #define STX 0x02
 #define ETX 0x03

@@ -162,14 +162,14 @@ void UART1_IntHandler(void)
 		}
 		else if (STX_RECEIVED) // if in recording
 		{
-			if (DLE_RECEIVED) // if received DLE
+			if (DLE_RECEIVED) // if received DLE last byte
 			{
 				RECEIVED_FRAME->frm[DATA_COUNT++] = data; // record data anyway
 				DLE_RECEIVED = FALSE;
 			}
-			else if (data == DLE)
+			else if (data == DLE) // if received DLE
 				DLE_RECEIVED = TRUE;
-			else if (data == ETX)
+			else if (data == ETX) // if received ETX
 			{
 				STX_RECEIVED = FALSE;
 				RECEIVED_FRAME->frm[DATA_COUNT++] = data; // record data anyway

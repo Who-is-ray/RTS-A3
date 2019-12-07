@@ -14,7 +14,6 @@ void EncodePacketToFrame(void* pkt, frame* frm)
 {
 	packet* Pkt = (packet*)pkt;
 	unsigned char checksum = 0;
-	frm->length = Pkt->size + FRAME_SIZE_OFFSET;
 
 	int i = 0;
 	// load STX
@@ -30,7 +29,7 @@ void EncodePacketToFrame(void* pkt, frame* frm)
 	        frm->frm[i++] = DLE;
 	    }
 
-		frm->frm[i-DLE_count] = Pkt->pkt[i - 1];
+		frm->frm[i] = Pkt->pkt[i - DLE_count - 1];
 		checksum += Pkt->pkt[i - 1]; // update check sum
 	}
 
@@ -39,4 +38,7 @@ void EncodePacketToFrame(void* pkt, frame* frm)
 
 	// load ETX
 	frm->frm[i] = ETX;
+
+	// update length
+	frm->length = i;
 }
