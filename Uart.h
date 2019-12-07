@@ -85,6 +85,9 @@
 #define BUSY 1  // Uart is busy
 #define IDLE 0  // Uart is idles
 
+#define UART1_MBX -2 //Uart1 mailbox number, uart1 will not receive any mail and will not bind to anymailbox
+#define RECEIVED_PORCESSOR_MBX 19 //Received message processor mailbox
+
 void UART0_Init(void);
 void UART1_Init(void);
 void InterruptEnable(unsigned long InterruptIndex);

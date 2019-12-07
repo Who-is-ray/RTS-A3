@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "Uart.h"
 #include "KernelCall.h"
 #include "PKCall.h"
 #include "Message.h"

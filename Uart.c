@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include "Uart.h"
 #include "Queue.h"
+#include "PKCall.h"
 #include "PhysicalLayer.h"
 
 #define STX 0x02
@@ -151,17 +152,30 @@ void UART1_IntHandler(void)
 
 		// check received message
 		char data = UART0_DR_R;
-		if (data == STX) // if received STX
+
+		if (data == STX && !STX_RECEIVED) // if received STX and not in recording
 		{
 			STX_RECEIVED = TRUE;
 			RECEIVED_FRAME = (frame*)malloc(sizeof(frame));
 			RECEIVED_FRAME->frm[DATA_COUNT++] = data;
 		}
-		else if (STX_RECEIVED)
+		else if (STX_RECEIVED) // if in recording
 		{
-			if (DLE_RECEIVED)
+			if (DLE_RECEIVED) // if received DLE
 			{
+				RECEIVED_FRAME->frm[DATA_COUNT++] = data; // record data anyway
+				DLE_RECEIVED = FALSE;
+			}
+			else if (data == DLE)
+				DLE_RECEIVED = TRUE;
+			else if (data == ETX)
+			{
+				STX_RECEIVED = FALSE;
+				RECEIVED_FRAME->frm[DATA_COUNT++] = data; // record data anyway
 
+				// send received frame to received processor
+				int sz = sizeof(&RECEIVED_FRAME);
+				Send(RECEIVED_PORCESSOR_MBX, UART1_MBX, &RECEIVED_FRAME, sz);
 			}
 		}
 	}

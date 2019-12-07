@@ -23,7 +23,6 @@
 
 #define PSR_INITIAL_VAL		0x01000000 // PSR initial value
 #define INITIAL_STACK_TOP_OFFSET    960 //stack top offset of stack pointer
-#define RECEIVED_PORCESSOR_MBX 19 //Received message processor mailbox
 #define UART0_OUTPUT_MBX	20	//Uart0 output mailbox number
 #define UART1_OUTPUT_MBX	21	//Uart1 output mailbox number
 #define PID_IDLE		0	//process id Idle
@@ -321,12 +320,14 @@ void Train_1_Application_Process()
 void Received_Message_Processor()
 {
 	int mbx = Bind(RECEIVED_PORCESSOR_MBX); // bind mailbox
-	Message* msg = NULL;
-	int size = sizeof(msg);
+	frame* received_frame = NULL;
+	int size = sizeof(received_frame);
 	int sender = NULL;
 	while (TRUE)
 	{
-		Receive(RECEIVED_PORCESSOR_MBX, &sender, &msg, &size); // check if message arrived
+		Receive(RECEIVED_PORCESSOR_MBX, &sender, &received_frame, &size); // check if message arrived
+
+		// Varify checksum
 	}
 }
 
