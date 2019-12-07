@@ -175,7 +175,7 @@ void UART1_IntHandler(void)
 
 				// send received frame to received processor
 				int sz = sizeof(&RECEIVED_FRAME);
-				Send(RECEIVED_PORCESSOR_MBX, UART1_MBX, &RECEIVED_FRAME, sz);
+				Send(RECEIVED_PORCESSOR_MBX, UART1_MBX, &RECEIVED_FRAME, &sz);
 			}
 		}
 	}
