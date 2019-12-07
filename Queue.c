@@ -39,10 +39,10 @@ void AddToQueue(Queue* queue, char data)
 	queue->Head = (head + 1) & QSM1;
 }
 
-int EnQueueIO(UartId t, Source s, char v)
+int EnQueueIO(UartId id, Source s, char v)
 {
     int head;
-    switch (t)
+    switch (id)
     {
         case UART0:
         {
@@ -74,16 +74,12 @@ int EnQueueIO(UartId t, Source s, char v)
                 UART1_IntDisable(UART_INT_TX); // disable UART transmit interrupt
 
                 if(UART1_STATUS == BUSY) // if uart is busy
-                {
-					if (v == STX || v == DLE || v == ETX) // if data is STX, DLE or ETX
-						AddToQueue(&OutQ_UART1, DLE); // add DLE to queue
-
+				{
                     // add data to queue
 					AddToQueue(&OutQ_UART1, v);
 				}
                 else // uart not busy
                 {
-
 						// directly output, set to busy
                         UART1_STATUS = BUSY;
 						UART1_DR_R = v;

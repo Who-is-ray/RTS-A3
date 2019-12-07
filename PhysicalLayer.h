@@ -22,5 +22,6 @@ typedef struct
 }frame;
 
 void EncodePacketToFrame(void* pkt, frame* frm);
+int DecodeFrameToPacket(frame* frm, void* pkt);
 
 #endif /* PHYSICALLAYER_H_ */

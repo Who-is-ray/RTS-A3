@@ -213,6 +213,7 @@ void SentMessage(int msg_len, Message* msg, int locomotive)
 	frame* to_send = &current_frame;
 	int sz = sizeof(&current_frame);
 	Send(UART1_OUTPUT_MBX, locomotive, &to_send, &sz); // output message
+	Ns++; // update Ns
 
 	// wait ack
 
@@ -337,7 +338,7 @@ void Received_Message_Processor()
 		Receive(RECEIVED_PORCESSOR_MBX, &sender, &received_frame, &size); // check if message arrived
 
 		// Varify checksum
-
+		
 	}
 }
 

@@ -8,7 +8,11 @@
 #include "PhysicalLayer.h"
 #include "DataLinkLayer.h"
 
+#define TRUE    1
+#define FALSE   0
 #define FRAME_SIZE_OFFSET	3	//frame has three bytes more than packet
+#define CHECKSUM_POS_END	2	//checksum at length-2 postion
+#define PACKET_POS	1 // position of packet in frame
 
 void EncodePacketToFrame(void* pkt, frame* frm)
 {
@@ -41,4 +45,21 @@ void EncodePacketToFrame(void* pkt, frame* frm)
 
 	// update length
 	frm->length = i;
+}
+
+int DecodeFrameToPacket(frame* frm, void* pkt)
+{
+	packet* Pkt = (packet*)pkt;
+
+	unsigned char checksum = 0;
+	int i;
+	// load packet
+	for (i = 0; i < frm->length-FRAME_SIZE_OFFSET; i++)
+	{
+		Pkt->pkt[i] = frm->frm[i + PACKET_POS];
+		checksum += frm->frm[i + PACKET_POS];
+	}
+
+	// return TRUE if checksum correct
+	return checksum == frm->frm[frm->length - CHECKSUM_POS_END] ? TRUE : FALSE;
 }
