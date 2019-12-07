@@ -161,6 +161,15 @@ void UART1_IntHandler(void)
 		}
 		else if (STX_RECEIVED) // if in recording
 		{
+			if (DATA_COUNT>=FRAME_MAXSIZE) // if over size, clear and return
+			{
+				STX_RECEIVED = FALSE;
+				DLE_RECEIVED = FALSE;
+				DATA_COUNT = 0;
+				free(RECEIVED_FRAME); // free memory
+				return;
+			}
+
 			if (DLE_RECEIVED) // if received DLE
 			{
 				RECEIVED_FRAME->frm[DATA_COUNT++] = data; // record data anyway
