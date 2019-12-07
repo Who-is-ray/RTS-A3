@@ -63,6 +63,8 @@
 #define EN_TX_PA1               0x00000002  // Enable Transmit Function on PA1
 #define EN_DIG_PA0              0x00000001  // Enable Digital I/O on PA0
 #define EN_DIG_PA1              0x00000002  // Enable Digital I/O on PA1
+#define EN_DIG_PB0              0x00000001  // Enable Digital I/O on PA0
+#define EN_DIG_PB1              0x00000002  // Enable Digital I/O on PA1
 
 // Clock Gating Registers
 #define SYSCTL_RCGCGPIO_R      (*((volatile unsigned long *)0x400FE608))
