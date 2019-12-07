@@ -182,6 +182,7 @@ void UART1_IntHandler(void)
 			{
 				STX_RECEIVED = FALSE;
 				RECEIVED_FRAME->frm[DATA_COUNT++] = data; // record data anyway
+				RECEIVED_FRAME->length = DATA_COUNT; // record length
 
 				// send received frame to received processor
 				int sz = sizeof(&RECEIVED_FRAME);

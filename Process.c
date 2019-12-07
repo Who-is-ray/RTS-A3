@@ -337,6 +337,7 @@ void Received_Message_Processor()
 		Receive(RECEIVED_PORCESSOR_MBX, &sender, &received_frame, &size); // check if message arrived
 
 		// Varify checksum
+
 	}
 }
 
