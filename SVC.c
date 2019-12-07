@@ -141,13 +141,14 @@ void SendCall(SendMsgArgs* args)
 				memcpy(receiver_waiting->Msg_addr, args->Msg_addr, copy_size); // copy message
 				*(receiver_waiting->Sender) = (args->Sender);
 				*args->Size = copy_size; // update size
-                receiver_waiting->Size = copy_size;
+                *receiver_waiting->Size = copy_size;
 
 				// Unblock process
 				Enqueue(recver, (QueueItem**) & (PRIORITY_LIST[recver->Priority])); // add back to process queue
 				recver->Mailbox_Wait = NULL;
 				recver->Msg_Wait = NULL;
-				UNBLOCK_PRIORITY = recver->Priority;
+				if(recver->Priority > UNBLOCK_PRIORITY)
+					UNBLOCK_PRIORITY = recver->Priority;
 			}
 			else // if is not waiting on this mailbox
 			{
