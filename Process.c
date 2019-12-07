@@ -36,6 +36,7 @@
 #define TWO_ARGS		3	//two arguments message length
 #define ONE_ARG			2	//one argument message length
 #define NO_ARG			1	//no argument message length
+#define TO_SECOND		2	//Half second to full second
 
 // create and initialize priority list
 PCB* PRIORITY_LIST[PRIORITY_LIST_SIZE] = {NULL, NULL, NULL, NULL, NULL, NULL};
@@ -270,69 +271,99 @@ int Run_machine(program* prog, int locomotive)
 	{
 		switch (prog->action[pc])
 		{
-		case GO: /* Go to HS# to dir and spd */
-		{
-			pc++;
-			curr_dir = prog->action[pc++];		
-			curr_spd = prog->action[pc++];
-			destination = prog->action[pc];
-
-			//create message
-			mag_dir speed = { curr_spd, IGNORED, curr_dir };
-			Message msg = { LOCOMOTIVE_CONTROLER, locomotive};
-			memcpy(&msg.arg2,&speed, sizeof(msg.arg2));
-
-			SentMessage(TWO_ARGS, &msg, locomotive);
-
-			int arrive_destination = FALSE;
-			while (!arrive_destination)
+			case GO: /* Go to HS# to dir and spd */
 			{
-				received_msg* hs_msg = NULL;
-				int sz = sizeof(hs_msg);
-				int sender;
-				Receive(locomotive, &sender, &hs_msg, &sz); // receive message
+				pc++;
+				curr_dir = prog->action[pc++];		
+				curr_spd = prog->action[pc++];
+				destination = prog->action[pc];
 
-				if (sender == RECEIVED_PORCESSOR_MBX) // if reached a hole sensor
+				//create message
+				mag_dir speed = { curr_spd, IGNORED, curr_dir };
+				Message msg = { LOCOMOTIVE_CONTROLER, locomotive};
+				memcpy(&msg.arg2,&speed, sizeof(msg.arg2));
+
+				SentMessage(TWO_ARGS, &msg, locomotive);
+
+				int arrive_destination = FALSE;
+				while (!arrive_destination)
 				{
-					if (hs_msg->msg->code == HOLESENSOR_TRAINSET) // if is hole sensor message
+					received_msg* hs_msg = NULL;
+					int sz = sizeof(hs_msg);
+					int sender;
+					Receive(locomotive, &sender, &hs_msg, &sz); // receive message
+
+					if (sender == RECEIVED_PORCESSOR_MBX) // if reached a hole sensor
 					{
-						if (hs_msg->msg->arg1 == destination) // if arrive destination
+						if (hs_msg->msg->code == HOLESENSOR_TRAINSET) // if is hole sensor message
 						{
-							arrive_destination = TRUE;
+							if (hs_msg->msg->arg1 == destination) // if arrive destination
+							{
+								arrive_destination = TRUE;
+							}
 						}
 					}
+					free(hs_msg); // release memary
 				}
-				free(hs_msg); // release memary
-			}
 
-			break;
-		}
-		//case SWITCH: /* Throw specific switch */
-		//{
-		//	printf("SWITCH: ");
-		//	pc++;
-		//	printf("Switch: %d %s\n", prog->action[pc++],
-		//		prog->action[pc] ? "STRAIGHT" : "DIVERGED");
-		//	break;
-		//}
-		//case HALT: /* Halt the train */
-		//{
-		//	printf("HALT\n");
-		//	curr_spd = 0;
-		//	printf("Speed to zero\n");
-		//	break;
-		//}
-		//case PAUSE: /* Pause the train for # second */
-		//{
-		//	printf("PAUSE\n");
-		//	pc++;
-		//	printf("Speed to zero\n");
-		//	printf("Wait for %d seconds\n", prog->action[pc]);
-		//	printf("Set speed to: %d\n", curr_spd);
-		//	break;
-		//}
-		//default:
-		//	printf("Unknown inst at pc: %d", pc);
+				break;
+			}
+			case SWITCH: /* Throw specific switch */
+			{
+				pc++;
+				unsigned char switch_id = prog->action[pc++]; // get switch id
+				unsigned char switch_dir = prog->action[pc++]; // get switch dir
+
+				Message msg = { SWITHC_CONTROLER, switch_id, switch_dir }; // create message
+				SentMessage(TWO_ARGS, &msg, locomotive); // send message
+
+				break;
+			}
+			case HALT: /* Halt the train */
+			{
+				//create message
+				mag_dir speed = { 0, IGNORED, IGNORED };
+				curr_spd = 0;
+				Message msg = { LOCOMOTIVE_CONTROLER, locomotive };
+				memcpy(&msg.arg2, &speed, sizeof(msg.arg2));
+				SentMessage(TWO_ARGS, &msg, locomotive); // send message
+
+				break;
+			}
+			case PAUSE: /* Pause the train for # second */
+			{
+				int sec = prog->action[pc];
+
+				//create message
+				mag_dir speed = { 0, IGNORED, IGNORED };
+				Message msg = { LOCOMOTIVE_CONTROLER, locomotive };
+				memcpy(&msg.arg2, &speed, sizeof(msg.arg2));
+
+				int sender = ERROR;
+				received_msg* rec_msg;
+				int sz_msg = sizeof(rec_msg);
+				int time_out = FALSE;
+				int time_count = 0;
+
+				// wait to second
+				while (!time_out)
+				{
+					Receive(locomotive, &sender, &rec_msg, &sz_msg);
+					if (sender == SYSTICK_MBX) // if received message from trainset
+						time_count++;
+
+					if (time_count*TO_SECOND == sec)
+						time_out = TRUE;
+
+					free(rec_msg); // release memory
+				}
+
+				mag_dir speed_resume = { curr_spd, IGNORED, curr_dir };
+				memcpy(&msg.arg2, &speed_resume, sizeof(msg.arg2));
+				SentMessage(TWO_ARGS, &msg, locomotive);
+
+				break;
+			}
 		}
 		pc++;
 	}

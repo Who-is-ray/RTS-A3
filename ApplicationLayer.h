@@ -33,6 +33,7 @@
 #define LOCOMOTIVE_CONTROLER	0xC0	/* Locomotive message from controller*/
 #define LOCOMOTIVE_TRAINSET		0xC2	/* Locomotive message from trainset*/
 #define HOLESENSOR_TRAINSET		0xA0	/* hole sensor message from trainset*/
+#define SWITHC_CONTROLER		0xE0	/* Switch message from controller*/
 
 // Structure of message
 typedef struct
