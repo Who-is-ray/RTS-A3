@@ -15,6 +15,7 @@
 
 #define TRUE    1
 #define FALSE   0
+#define NULL	0
 #define QUEUESIZE 8 // the size of queue
 #define QSM1 QUEUESIZE-1 // Queue size minus one
 

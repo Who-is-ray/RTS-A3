@@ -14,6 +14,10 @@
 #include "Queue.h"
 #include "Uart.h"
 
+#define STX 0x02
+#define ETX 0x03
+#define DLE 0x10
+
 extern int UART_STATUS;
 
 Queue OutQ_UART0;
@@ -25,6 +29,13 @@ void Queue_Init()
     OutQ_UART0.Tail=0;//output queue's tail
 	OutQ_UART1.Head = 0;//output queue's head
 	OutQ_UART1.Tail = 0;//output queue's tail
+}
+
+void AddToQueue(Queue* queue, char data)
+{
+	int head = queue->Head;
+	queue->queue[queue->Head].value = data;
+	queue->Head = (head + 1) & QSM1;
 }
 
 int EnQueueIO(UartId t, Source s, char v)
@@ -41,8 +52,7 @@ int EnQueueIO(UartId t, Source s, char v)
 				if (UART_STATUS == BUSY) // if uart is busy
 				{
 					// add to queue
-					OutQ_UART0.queue[OutQ_UART0.Head].value = v;
-					OutQ_UART0.Head = (head + 1) & QSM1;
+					AddToQueue(&OutQ_UART0, v);
 				}
 				else // uart not busy
 				{
@@ -61,17 +71,31 @@ int EnQueueIO(UartId t, Source s, char v)
             if(((head+1) & QSM1) != OutQ_UART1.Tail)  // if not full
             {
                 UART0_IntDisable(UART_INT_TX); // disable UART transmit interrupt
+
                 if(UART_STATUS == BUSY) // if uart is busy
                 {
-                    // add to queue
-					OutQ_UART1.queue[OutQ_UART1.Head].value = v;
-                    OutQ_UART1.Head=(head+1)&QSM1;
-                }
+					if (v == STX || v == DLE || v == ETX) // if data is STX, DLE or ETX
+						AddToQueue(&OutQ_UART1, DLE); // add DLE to queue
+
+                    // add data to queue
+					AddToQueue(&OutQ_UART1, v);
+				}
                 else // uart not busy
                 {
-                    // directly output, set to busy
-                    UART_STATUS = BUSY;
-                    UART0_DR_R = v;
+					if (v == STX || v == DLE || v == ETX) // if data is STX, DLE or ETX
+					{
+						AddToQueue(&OutQ_UART1, v);
+
+						// directly output DLE, set to busy
+						UART_STATUS = BUSY;
+						UART0_DR_R = DLE;
+					}
+					else
+					{
+						// directly output, set to busy
+						UART_STATUS = BUSY;
+						UART0_DR_R = v;
+					}
                 }
                 UART0_IntEnable(UART_INT_TX); // enable UART transmit interrupt
                 return TRUE;

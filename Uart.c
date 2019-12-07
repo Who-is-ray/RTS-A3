@@ -12,10 +12,20 @@
  *  From Assignment 1
  */
 
+#include <stdlib.h>
 #include "Uart.h"
 #include "Queue.h"
+#include "PhysicalLayer.h"
+
+#define STX 0x02
+#define ETX 0x03
+#define DLE 0x10
 
 volatile int UART_STATUS = IDLE;
+int DATA_COUNT = 0;
+int STX_RECEIVED = FALSE;
+int DLE_RECEIVED = FALSE;
+frame* RECEIVED_FRAME = NULL;
 
 void UART0_Init(void)
 {
@@ -100,6 +110,7 @@ void UART0_IntHandler(void)
 	{
 		/* RECV done - clear interrupt and make char available to application */
 		UART0_ICR_R |= UART_INT_RX;
+		// no receive function for uart 0
 	}
 
 	if (UART0_MIS_R & UART_INT_TX)
@@ -139,6 +150,20 @@ void UART1_IntHandler(void)
 		UART1_ICR_R |= UART_INT_RX;
 
 		// check received message
+		char data = UART0_DR_R;
+		if (data == STX) // if received STX
+		{
+			STX_RECEIVED = TRUE;
+			RECEIVED_FRAME = (frame*)malloc(sizeof(frame));
+			RECEIVED_FRAME->frm[DATA_COUNT++] = data;
+		}
+		else if (STX_RECEIVED)
+		{
+			if (DLE_RECEIVED)
+			{
+
+			}
+		}
 	}
 
 	if (UART1_MIS_R & UART_INT_TX)

@@ -329,7 +329,7 @@ void SVCHandler(Stack *argptr)
 		{
 			SendMsgArgs* args = (SendMsgArgs*)kcaptr->Arg1; // get the argument
 
-			if (MAILBOXLIST[args->Sender].Owner == RUNNING) // if sender is valid
+			if (MAILBOXLIST[args->Sender].Owner == RUNNING) // if sender is valid or from special sender (UartISR, SystickISR)
 			{
 				PCB* recver = MAILBOXLIST[args->Recver].Owner;
 				if (recver != NULL) // if receiver is valid
