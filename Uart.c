@@ -29,6 +29,8 @@ int STX_RECEIVED = FALSE;
 int DLE_RECEIVED = FALSE;
 frame* RECEIVED_FRAME = NULL;
 
+extern void SendCall(SendMsgArgs* args);
+
 void UART0_Init(void)
 {
 	volatile int wait;
@@ -186,7 +188,8 @@ void UART1_IntHandler(void)
 
 				// send received frame to received processor
 				int sz = sizeof(&RECEIVED_FRAME);
-				Send(RECEIVED_PORCESSOR_MBX, UART1_MBX, &RECEIVED_FRAME, &sz);
+				SendMsgArgs arg = { RECEIVED_PORCESSOR_MBX, UART1_MBX, &RECEIVED_FRAME, &sz };
+				SendCall(&arg);
 			}
 		}
 	}

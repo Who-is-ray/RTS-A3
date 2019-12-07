@@ -125,6 +125,60 @@ __asm("     POP     {PC}");
 
 }
 
+void SendCall(SendMsgArgs* args)
+{
+	if (MAILBOXLIST[args->Sender].Owner == RUNNING || args->Sender == SYSTICK_MBX || args->Sender == UART1_MBX) // if sender is valid or from special sender (UartISR, SystickISR)
+	{
+		PCB* recver = MAILBOXLIST[args->Recver].Owner;
+		if (recver != NULL) // if receiver is valid
+		{
+			if ((recver->Mailbox_Wait == args->Recver || recver->Mailbox_Wait == ANYMAILBOX) && recver->Msg_Wait != NULL) // if receiver is blocked and waiting for this mailbox
+			{
+				RecvMsgArgs* receiver_waiting = recver->Msg_Wait;
+				int copy_size = *args->Size < *receiver_waiting->Size ? *args->Size : *receiver_waiting->Size; // get smaller size
+
+				// Copy msg to receiver
+				memcpy(receiver_waiting->Msg_addr, args->Msg_addr, copy_size); // copy message
+				*(receiver_waiting->Sender) = (args->Sender);
+				*args->Size = copy_size; // update size
+                receiver_waiting->Size = copy_size;
+
+				// Unblock process
+				Enqueue(recver, (QueueItem**) & (PRIORITY_LIST[recver->Priority])); // add back to process queue
+				recver->Mailbox_Wait = NULL;
+				recver->Msg_Wait = NULL;
+				UNBLOCK_PRIORITY = recver->Priority;
+			}
+			else // if is not waiting on this mailbox
+			{
+				// Add message to mailbox
+				Message* msg = malloc(sizeof(Message)); // create message struct
+				msg->Message_Addr = malloc(*args->Size); // allocate message memory
+				memcpy(msg->Message_Addr, args->Msg_addr, *args->Size); // copy from process stack to mailbox
+				msg->Size = *args->Size; // store the size
+				msg->Sender = args->Sender; // store the sender's mailbox number
+				msg->Next = NULL; // to add to the end of message list
+
+				Message* mbx_last_msg = MAILBOXLIST[args->Recver].Last_Message;
+				if (mbx_last_msg == NULL) // if no message in mailbox
+				{
+					MAILBOXLIST[args->Recver].First_Message = msg; // update mailbox's first message pointer
+					MAILBOXLIST[args->Recver].Last_Message = msg; // update mailbox's last message pointer
+				}
+				else
+				{
+					mbx_last_msg->Next = msg; // add to end on list
+					MAILBOXLIST[args->Recver].Last_Message = msg; // update tail of list
+				}
+			}
+		}
+		else
+			*args->Size = INVALID_RECVER;
+	}
+	else
+		*args->Size = INVALID_SENDER;
+}
+
 void SVCHandler(Stack *argptr)
 {
     /*
@@ -331,54 +385,7 @@ void SVCHandler(Stack *argptr)
 		{
 			SendMsgArgs* args = (SendMsgArgs*)kcaptr->Arg1; // get the argument
 
-			if (MAILBOXLIST[args->Sender].Owner == RUNNING || args->Sender == SYSTICK_MBX || args->Sender == UART1_MBX) // if sender is valid or from special sender (UartISR, SystickISR)
-			{
-				PCB* recver = MAILBOXLIST[args->Recver].Owner;
-				if (recver != NULL) // if receiver is valid
-				{
-					if ((recver->Mailbox_Wait == args->Recver || recver->Mailbox_Wait == ANYMAILBOX) && recver->Msg_Wait != NULL) // if receiver is blocked and waiting for this mailbox
-					{
-						RecvMsgArgs* receiver_waiting = recver->Msg_Wait;
-						int copy_size = *args->Size < *receiver_waiting->Size ? *args->Size : *receiver_waiting->Size; // get smaller size
-
-						// Copy msg to receiver
-						memcpy(receiver_waiting->Msg_addr, args->Msg_addr, copy_size); // copy message
-						*args->Size = copy_size; // update size
-
-						// Unblock process
-						Enqueue(recver, (QueueItem**)& (PRIORITY_LIST[recver->Priority])); // add back to process queue
-						recver->Mailbox_Wait = NULL;
-						recver->Msg_Wait = NULL;
-						UNBLOCK_PRIORITY = recver->Priority;
-					}
-					else // if is not waiting on this mailbox
-					{
-						// Add message to mailbox
-						Message* msg = malloc(sizeof(Message)); // create message struct
-						msg->Message_Addr = malloc(*args->Size); // allocate message memory
-						memcpy(msg->Message_Addr, args->Msg_addr, *args->Size); // copy from process stack to mailbox
-						msg->Size = *args->Size; // store the size
-						msg->Sender = args->Sender; // store the sender's mailbox number
-						msg->Next = NULL; // to add to the end of message list
-
-						Message* mbx_last_msg = MAILBOXLIST[args->Recver].Last_Message;
-						if (mbx_last_msg == NULL) // if no message in mailbox
-						{
-							MAILBOXLIST[args->Recver].First_Message = msg; // update mailbox's first message pointer
-							MAILBOXLIST[args->Recver].Last_Message = msg; // update mailbox's last message pointer
-						}
-						else
-						{
-							mbx_last_msg->Next = msg; // add to end on list
-							MAILBOXLIST[args->Recver].Last_Message = msg; // update tail of list
-						}
-					}
-				}
-				else
-					*args->Size = INVALID_RECVER;
-			}
-			else
-				*args->Size = INVALID_SENDER;
+			SendCall(args);
 
 			break;
 		}

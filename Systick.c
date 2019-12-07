@@ -22,9 +22,11 @@
 #define RESEND_CYCLE	50 //resend every 50 timecycle
 
 volatile int PENDSV_ON;
-extern int RESEND_COUNTING;
-extern int RESEND_MBX; // MAILBOX to receive resend notice from systick
+extern volatile int RESEND_COUNTING;
+extern volatile int RESEND_MBX; // MAILBOX to receive resend notice from systick
 int counting_time = 0;
+
+extern void SendCall(SendMsgArgs* args);
 
 void SysTickStart(void)
 {
@@ -68,7 +70,8 @@ void SysTickHandler(void)
 		counting_time = 0;
 		int msg = NULL;
 		int sz = sizeof(msg);
-		Send(RESEND_MBX, SYSTICK_MBX, &msg, &sz);
+		SendMsgArgs arg = { RESEND_MBX, SYSTICK_MBX, &msg, &sz };
+		SendCall(&arg);
 	}
 
     if (PENDSV_ON == FALSE)

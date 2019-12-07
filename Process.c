@@ -43,8 +43,8 @@ PCB* PRIORITY_LIST[PRIORITY_LIST_SIZE] = {NULL, NULL, NULL, NULL, NULL, NULL};
 // RUNNING Pcb
 volatile PCB* RUNNING = NULL;
 
-int RESEND_COUNTING = FALSE; // flag for systick to count for resend
-int RESEND_MBX; // MAILBOX to receive resend notice from systick
+volatile int RESEND_COUNTING = FALSE; // flag for systick to count for resend
+volatile int RESEND_MBX; // MAILBOX to receive resend notice from systick
 
 volatile char Ns = 0; // receive seq #
 volatile char Nr = 0; // send seq #
@@ -218,7 +218,7 @@ void SendFrame(frame* to_send, int locomotive)
 	RESEND_MBX = locomotive;
 
 	// wait ack
-	int sender;
+	int sender = ERROR;
 	received_msg* rec_msg;
 	int sz_msg = sizeof(rec_msg);
 	int rec_ack = FALSE;
@@ -438,6 +438,7 @@ void Initialize_Process()
 {
 	reg_process(process_IDLE, PID_IDLE, PRIORITY_IDLE); // register idle process
 	reg_process(Train_1_Application_Process, LOCOMOTIVE_1, PRIORITY_3); // register process 1
+    reg_process(Received_Message_Processor, 2, PRIORITY_3); // register Received_Message_Processor process
     reg_process(process_UART0_OUTPUT, PID_UART0, PRIORITY_UART); // fegister uart output process
     reg_process(process_UART1_OUTPUT, PID_UART1, PRIORITY_UART); // fegister uart output process
 }
