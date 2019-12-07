@@ -82,7 +82,7 @@ void process_UART1_OUTPUT()
 	while (TRUE) // keep checking mailbox
 	{
 		Receive(UART1_OUTPUT_MBX, &sender, &msg, &size); // get message
-		//OutputData(msg->frm, msg->length, UART1); // output message
+		OutputData(msg->frm, msg->length, UART1); // output message
 
         //OutputData(m, 8, UART1); // output switch 5 divert
 
@@ -229,19 +229,14 @@ int Run_machine(program* prog, int locomotive)
 	pc = 0;
 	while (pc < prog->length && pc < PROGRAM_MAXSIZE && prog->action[pc] != END)
 	{
-		//printf("%d: ", prog->action[pc]);
 		switch (prog->action[pc])
 		{
 		case GO: /* Go to HS# to dir and spd */
 		{
-			//printf("GO: ");
 			pc++;
 			curr_dir = prog->action[pc++];		
 			curr_spd = prog->action[pc++];
 			destination = prog->action[pc];
-
-			//printf("Direction: %s Speed: %d HS: %d\n",
-				//curr_dir == CW ? "CW" : "CCW", curr_spd, destination);
 
 			//create message
 			mag_dir speed = { curr_spd, IGNORED, curr_dir };
@@ -252,7 +247,6 @@ int Run_machine(program* prog, int locomotive)
 
 			int msg_rec = '2';
 			int size_rec = sizeof(msg_rec);
-			//OutputData((char*)&msg_rec, sizeof(size_rec), UART0); // output message
 			Send(UART0_OUTPUT_MBX, locomotive, &msg_rec, &size_rec);
 
 			while (TRUE)
@@ -334,12 +328,16 @@ void Received_Message_Processor()
 	frame* received_frame = NULL;
 	int size = sizeof(received_frame);
 	int sender = NULL;
+	packet pkt;
 	while (TRUE)
 	{
 		Receive(RECEIVED_PORCESSOR_MBX, &sender, &received_frame, &size); // check if message arrived
 
 		// Varify checksum
-		
+		if (DecodeFrameToPacket(received_frame, &pkt)) // if received packet is valid (checksum correct)
+		{
+
+		}
 	}
 }
 

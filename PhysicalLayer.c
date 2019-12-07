@@ -25,23 +25,24 @@ void EncodePacketToFrame(void* pkt, frame* frm)
 
 	// load packet
 	int DLE_count = 0;
-	for (; i < Pkt->size + 1; i++)
+	for (; i < Pkt->size + PACKET_POS + DLE_count; i++)
 	{
-	    if(Pkt->pkt[i - 1] == STX || Pkt->pkt[i - 1] == DLE ||Pkt->pkt[i - 1] == ETX)
+	    char pkt_data = Pkt->pkt[i - DLE_count - PACKET_POS];
+	    if( pkt_data == STX || pkt_data == DLE || pkt_data == ETX)
 	    {
 	        DLE_count++;
 	        frm->frm[i++] = DLE;
 	    }
 
-		frm->frm[i] = Pkt->pkt[i - DLE_count - 1];
-		checksum += Pkt->pkt[i - 1]; // update check sum
+		frm->frm[i] = pkt_data;
+		checksum += pkt_data; // update check sum
 	}
 
 	// load checksum
 	frm->frm[i++] = checksum;
 
 	// load ETX
-	frm->frm[i] = ETX;
+	frm->frm[i++] = ETX;
 
 	// update length
 	frm->length = i;
@@ -50,6 +51,7 @@ void EncodePacketToFrame(void* pkt, frame* frm)
 int DecodeFrameToPacket(frame* frm, void* pkt)
 {
 	packet* Pkt = (packet*)pkt;
+	Pkt->size = frm->length - FRAME_SIZE_OFFSET;
 
 	unsigned char checksum = 0;
 	int i;
