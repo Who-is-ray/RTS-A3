@@ -191,9 +191,8 @@ void UART1_IntHandler(void)
 				SendMsgArgs arg = { RECEIVED_PORCESSOR_MBX, UART1_MBX, &RECEIVED_FRAME, &sz };//the receive function who depend on this mailbox will be unblock
 				SendCall(&arg);
 			}
-			else{
+			else // record data
 			    RECEIVED_FRAME->frm[DATA_COUNT++] = data;
-			}
 		}
 	}
 

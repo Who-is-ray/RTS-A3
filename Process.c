@@ -93,9 +93,6 @@ void process_UART1_OUTPUT()
 	{
 		Receive(UART1_OUTPUT_MBX, &sender, &msg, &size); // get message
 		OutputData(msg->frm, msg->length, UART1); // output message
-
-        //OutputData(m, 8, UART1); // output switch 5 divert
-
 	}
 
 }
@@ -210,13 +207,13 @@ unsigned long get_SP()
 
 void SendFrame(frame* to_send, int locomotive)
 {
-	int sz = sizeof(&current_frame);
+	int sz = sizeof(&to_send);
 	Send(UART1_OUTPUT_MBX, locomotive, &to_send, &sz); // output message
 	Ns++; // update Ns
 
 	// Notice Systick
 	RESEND_COUNTING = TRUE;
-	//RESEND_MBX = locomotive
+	RESEND_MBX = locomotive;
 
 	// wait ack
 	int sender = ERROR;
@@ -225,7 +222,7 @@ void SendFrame(frame* to_send, int locomotive)
 	int rec_ack = FALSE;
 	while (!rec_ack)
 	{
-		Receive(locomotive, &sender, &rec_msg, &sz_msg);
+		Receive(locomotive, &sender, &rec_msg, &sz_msg); // wait to receive ack or resend, then blocked here, go idle
 		if (sender == RECEIVED_PORCESSOR_MBX) // if received message from trainset
 		{
 			if (rec_msg->type == ACK) // if received ack
@@ -274,10 +271,8 @@ int Run_machine(program* prog, int locomotive)
 			case GO: /* Go dir @ speed to HS */
 			{
 				pc++;
-				curr_dir = prog->action[pc];
-				pc++;
-				curr_spd = prog->action[pc];
-				pc++;
+				curr_dir = prog->action[pc++];
+				curr_spd = prog->action[pc++];
 				destination = prog->action[pc];//destination hall sensor
 
 				//create message
@@ -287,7 +282,7 @@ int Run_machine(program* prog, int locomotive)
 				memcpy(&msg.arg2,&speed, sizeof(msg.arg2));
 
 				SentMessage(TWO_ARGS, &msg, locomotive);
-//////everytime after sent it goes to idle why????
+//////see line 225
 				int arrive_destination = FALSE;
 				while (!arrive_destination)
 				{
@@ -376,7 +371,7 @@ int Run_machine(program* prog, int locomotive)
 }
 
 void Train_1_Application_Process()
-{//set route
+{
 	int mbx = Bind(LOCOMOTIVE_1); // bind mailbox
 
 	// create route
