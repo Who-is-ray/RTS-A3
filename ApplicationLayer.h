@@ -42,7 +42,7 @@ typedef struct
 	unsigned char code; /* Message code (described below) */
 	unsigned char arg1; /* First argument (optional) */
 	unsigned char arg2; /* Second argument (optional) */
-} Message;
+} Message;//this is different with the definition of message in message.h
 
 // Structure of speend magnitude and direction
 typedef struct 
