@@ -287,7 +287,7 @@ int Run_machine(program* prog, int locomotive)
 				memcpy(&msg.arg2,&speed, sizeof(msg.arg2));
 
 				SentMessage(TWO_ARGS, &msg, locomotive);
-
+//////everytime after sent it goes to idle why????
 				int arrive_destination = FALSE;
 				while (!arrive_destination)
 				{
@@ -381,10 +381,11 @@ void Train_1_Application_Process()
 
 	// create route
 	program route = { 13,
+	    GO, CW, 7, 21,
 	    SWITCH, 5, DIVERGED, /* Switch '0' to diverged */
 	    HALT,
 	    GO, CCW, 5, 3, /* Go CW @ speed 5 to HS#3 */
-	    GO, CW, 2, 21,
+
 	    END };
 
     //char msg[9] = {0x02,0x00,0x10,0x03,0xc0,0xff,0x85,0xb8,0x03}; // working!!!
