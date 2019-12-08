@@ -378,9 +378,9 @@ void Train_1_Application_Process()
 
 	// create route
 	program route = { 13,
-	    GO, CCW, 5, 3, /* Go CW @ speed 4 to HS#3 */
 	    SWITCH, 0, DIVERGED, /* Switch '0' to diverged */
 	    HALT,
+	    GO, CCW, 5, 3, /* Go CW @ speed 5 to HS#3 */
 	    GO, CW, 2, 21,
 	    END };
 
