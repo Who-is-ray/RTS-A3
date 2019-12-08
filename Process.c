@@ -384,6 +384,9 @@ void Train_1_Application_Process()
 	    GO, CW, 2, 21,
 	    END };
 
+    //char msg[9] = {0x02,0x00,0x10,0x03,0xc0,0xff,0x85,0xb8,0x03}; // working!!!
+    //OutputData(msg, 9, 1);
+
 	Run_machine(&route, ALL_LOCOMOTIVE);
 }
 

@@ -40,7 +40,7 @@ void EncodePacketToFrame(void* pkt, frame* frm)
 	}
 
 	// load checksum
-	frm->frm[i++] = checksum;
+	frm->frm[i++] = ~checksum;
 
 	// load ETX
 	frm->frm[i++] = ETX;
@@ -65,5 +65,5 @@ int DecodeFrameToPacket(frame* frm, void* pkt)
 	}
 
 	// return TRUE if checksum correct
-	return checksum == frm->frm[frm->length - CHECKSUM_POS_END] ? TRUE : FALSE;
+	return ~checksum == frm->frm[frm->length - CHECKSUM_POS_END] ? TRUE : FALSE;
 }
