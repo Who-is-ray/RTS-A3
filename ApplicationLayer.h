@@ -10,6 +10,7 @@
 
 #define PROGRAM_MAXSIZE	32	/* Maximum program length */
 #define LOCOMOTIVE_1	1	/* Locomotive # 1*/
+#define ALL_LOCOMOTIVE  0xFF/* All locomotive*/
 #define TRUE    1
 #define FALSE   0
 #define IGNORED	0

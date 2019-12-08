@@ -256,7 +256,7 @@ void SentMessage(int msg_len, Message* msg, int locomotive)
 
 	// send frame
 	frame* to_send = &current_frame;
-	SendFrame(to_send, locomotive);
+	SendFrame(to_send, LOCOMOTIVE_1);
 }
 
 // function to run the program
@@ -378,13 +378,13 @@ void Train_1_Application_Process()
 
 	// create route
 	program route = { 13,
-	GO, CW, 4, 3, /* Go CW @ speed 4 to HS#3 */
-	HALT,
-	SWITCH, 0, DIVERGED, /* Switch '0' to diverged */
-	GO, CW, 2, 21,
-	END };
+	    GO, CCW, 5, 3, /* Go CW @ speed 4 to HS#3 */
+	    SWITCH, 0, DIVERGED, /* Switch '0' to diverged */
+	    HALT,
+	    GO, CW, 2, 21,
+	    END };
 
-	Run_machine(&route, LOCOMOTIVE_1);
+	Run_machine(&route, ALL_LOCOMOTIVE);
 }
 
 /* The process to manage the received message from trainset*/
