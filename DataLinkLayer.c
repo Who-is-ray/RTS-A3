@@ -14,7 +14,7 @@ extern char Nr;
 
 #define PACKET_SIZE_OFFSET	2	// data packet has 2 more byte than message
 
-void EncodeMsgToPacket(char* msg, int length, packet* pkt)
+void EncodeMsgToPacket(char* msg, int length, packet* pkt)//turn message to packet. packet=msg+length+control
 {
 	pkt->size = length + PACKET_SIZE_OFFSET;
 

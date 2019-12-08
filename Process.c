@@ -216,7 +216,7 @@ void SendFrame(frame* to_send, int locomotive)
 
 	// Notice Systick
 	RESEND_COUNTING = TRUE;
-	RESEND_MBX = locomotive;
+	//RESEND_MBX = locomotive
 
 	// wait ack
 	int sender = ERROR;
@@ -252,10 +252,10 @@ void SentMessage(int msg_len, Message* msg, int locomotive)
 
 	// encode to current frame
 	privious_frame = current_frame; // save last frame
-	EncodePacketToFrame(&pkt, &current_frame);
+	EncodePacketToFrame(&pkt, &current_frame);// store data to current frame
 
 	// send frame
-	frame* to_send = &current_frame;
+	frame* to_send = &current_frame;//create an address, same as sendframe(&current_frame,...)
 	SendFrame(to_send, LOCOMOTIVE_1);
 }
 
@@ -263,24 +263,27 @@ void SentMessage(int msg_len, Message* msg, int locomotive)
 int Run_machine(program* prog, int locomotive)
 {
 	/* Follows instructions in supplied program (the route) */
-	unsigned int pc;
-	unsigned int curr_spd = NULL, curr_dir = CW, destination = NULL;
+	unsigned int pc;// a counter
+	unsigned int curr_spd = NULL, curr_dir = CW, destination = NULL;//current speed and current direction
 
-	pc = 0;
+	pc = 0;//pc will start from beginning
 	while (pc < prog->length && pc < PROGRAM_MAXSIZE && prog->action[pc] != END)
 	{
 		switch (prog->action[pc])
 		{
-			case GO: /* Go to HS# to dir and spd */
+			case GO: /* Go dir @ speed to HS */
 			{
 				pc++;
-				curr_dir = prog->action[pc++];		
-				curr_spd = prog->action[pc++];
-				destination = prog->action[pc];
+				curr_dir = prog->action[pc];
+				pc++;
+				curr_spd = prog->action[pc];
+				pc++;
+				destination = prog->action[pc];//destination hall sensor
 
 				//create message
 				mag_dir speed = { curr_spd, IGNORED, curr_dir };
 				Message msg = { LOCOMOTIVE_CONTROLER, locomotive};
+				//Message is the same name with in Message.h but in process.c we didn't include Message.h
 				memcpy(&msg.arg2,&speed, sizeof(msg.arg2));
 
 				SentMessage(TWO_ARGS, &msg, locomotive);
@@ -312,7 +315,7 @@ int Run_machine(program* prog, int locomotive)
 			{
 				pc++;
 				unsigned char switch_id = prog->action[pc++]; // get switch id
-				unsigned char switch_dir = prog->action[pc++]; // get switch dir
+				unsigned char switch_dir = prog->action[pc]; // get switch dir
 
 				Message msg = { SWITHC_CONTROLER, switch_id, switch_dir }; // create message
 				SentMessage(TWO_ARGS, &msg, locomotive); // send message
@@ -373,12 +376,12 @@ int Run_machine(program* prog, int locomotive)
 }
 
 void Train_1_Application_Process()
-{
+{//set route
 	int mbx = Bind(LOCOMOTIVE_1); // bind mailbox
 
 	// create route
 	program route = { 13,
-	    SWITCH, 0, DIVERGED, /* Switch '0' to diverged */
+	    SWITCH, 5, DIVERGED, /* Switch '0' to diverged */
 	    HALT,
 	    GO, CCW, 5, 3, /* Go CW @ speed 5 to HS#3 */
 	    GO, CW, 2, 21,
