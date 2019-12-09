@@ -441,6 +441,9 @@ void Received_Message_Processor()
 				}
 				else if (ns == Nr+1) // if miss last message
 				{
+					// save last frame
+					SaveLastFrame();
+
 					// return NACK
 					int sz_nack = sizeof(current_frame);
 					GetAckFrame(&current_frame, NACK);
