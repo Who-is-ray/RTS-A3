@@ -55,7 +55,7 @@ int DecodeFrameToPacket(frame* frm, void* pkt)
 	packet* Pkt = (packet*)pkt;
 	Pkt->size = frm->length - FRAME_SIZE_OFFSET;
 
-	unsigned char checksum = 0;
+	char checksum = 0;
 	int i;
 	// load packet
 	for (i = 0; i < frm->length-FRAME_SIZE_OFFSET; i++)
@@ -63,7 +63,6 @@ int DecodeFrameToPacket(frame* frm, void* pkt)
 		Pkt->pkt[i] = frm->frm[i + PACKET_POS];
 		checksum += frm->frm[i + PACKET_POS];
 	}
-
 	// return TRUE if checksum correct
-	return ((~checksum) == frm->frm[frm->length - CHECKSUM_POS_END]);
+	return ((char)(~checksum) == (char)(frm->frm[frm->length - CHECKSUM_POS_END]));
 }

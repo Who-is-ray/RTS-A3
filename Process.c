@@ -248,8 +248,11 @@ void SentMessage(int msg_len, Message* msg, int locomotive)
 	packet pkt;
 	EncodeMsgToPacket((char*)msg, msg_len, &pkt);
 
+	// save last frame
+    memcpy(privious_frame.frm,current_frame.frm, current_frame.length);
+	privious_frame.length = current_frame.length;
+
 	// encode to current frame
-	privious_frame = current_frame; // save last frame
 	EncodePacketToFrame(&pkt, &current_frame);// store data to current frame
 
 	// send frame
@@ -377,17 +380,16 @@ void Train_1_Application_Process()
 
 	// create route
 	program route = { 13,
-	    GO, CW, 7, 21,
-	    SWITCH, 5, DIVERGED, /* Switch '0' to diverged */
+	    GO, CW, 5, 8,
+	    SWITCH, 3, DIVERGED, /* Switch '0' to diverged */
+	    GO, CCW, 5, 19, /* Go CW @ speed 5 to HS#3 */
 	    HALT,
-	    GO, CCW, 5, 3, /* Go CW @ speed 5 to HS#3 */
-
 	    END };
 
     //char msg[9] = {0x02,0x00,0x10,0x03,0xc0,0xff,0x85,0xb8,0x03}; // working!!!
     //OutputData(msg, 9, 1);
 
-	Run_machine(&route, ALL_LOCOMOTIVE);
+	Run_machine(&route, LOCOMOTIVE_1);
 }
 
 /* The process to manage the received message from trainset*/
@@ -405,8 +407,10 @@ void Received_Message_Processor()
 		// Varify checksum
 		if (DecodeFrameToPacket(received_frame, &pkt)) // if received packet is valid (checksum correct)
 		{
-			int type = ((int)pkt.pkt[CONTROL]) >> TYPE_SHIFT;
-			int nr = ((int)pkt.pkt[CONTROL]) & NR_AND;
+			char type = ((int)pkt.pkt[CONTROL]) >> TYPE_SHIFT;
+			char nr = ((int)pkt.pkt[CONTROL]) & NR_AND;
+
+	        OutputData((char*)&nr, sizeof(nr), UART0); // output message
 
 			if (type == DATA) // if received data
 			{
@@ -459,7 +463,11 @@ void Received_Message_Processor()
 				SendFrame(&current_frame, LOCOMOTIVE_1);
 			}
 		}
-
+		else
+		{
+		    int a = 0;
+		    a++;
+		}
 		free(received_frame); // release meemory
 	}
 }
