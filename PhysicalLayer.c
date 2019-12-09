@@ -65,5 +65,5 @@ int DecodeFrameToPacket(frame* frm, void* pkt)
 	}
 
 	// return TRUE if checksum correct
-	return ~checksum == frm->frm[frm->length - CHECKSUM_POS_END] ? TRUE : FALSE;
+	return ((~checksum) == frm->frm[frm->length - CHECKSUM_POS_END]) ? TRUE : FALSE;
 }
