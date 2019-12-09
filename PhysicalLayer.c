@@ -58,7 +58,7 @@ int DecodeFrameToPacket(frame* frm, void* pkt)
 	char checksum = 0;
 	int i;
 	// load packet
-	for (i = 0; i < frm->length-FRAME_SIZE_OFFSET; i++)
+	for (i = 0; i < Pkt->size; i++)
 	{
 		Pkt->pkt[i] = frm->frm[i + PACKET_POS];
 		checksum += frm->frm[i + PACKET_POS];

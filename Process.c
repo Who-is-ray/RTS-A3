@@ -241,6 +241,13 @@ void SendFrame(frame* to_send, int locomotive)
 	}
 }
 
+void SaveLastFrame()
+{
+	// save last frame
+	memcpy(privious_frame.frm, current_frame.frm, current_frame.length);
+	privious_frame.length = current_frame.length;
+}
+
 // Function to encode message to packet, encode packet to frame, send frame and wait for ack
 void SentMessage(int msg_len, Message* msg, int locomotive)
 {
@@ -249,8 +256,7 @@ void SentMessage(int msg_len, Message* msg, int locomotive)
 	EncodeMsgToPacket((char*)msg, msg_len, &pkt);
 
 	// save last frame
-    memcpy(privious_frame.frm,current_frame.frm, current_frame.length);
-	privious_frame.length = current_frame.length;
+	SaveLastFrame();
 
 	// encode to current frame
 	EncodePacketToFrame(&pkt, &current_frame);// store data to current frame
@@ -369,7 +375,6 @@ int Run_machine(program* prog, int locomotive)
 		}
 		pc++;
 	}
-	//printf("End of program\n");
 
 	return TRUE;
 }
@@ -385,9 +390,6 @@ void Train_1_Application_Process()
 	    GO, CCW, 5, 19, /* Go CW @ speed 5 to HS#3 */
 	    HALT,
 	    END };
-
-    //char msg[9] = {0x02,0x00,0x10,0x03,0xc0,0xff,0x85,0xb8,0x03}; // working!!!
-    //OutputData(msg, 9, 1);
 
 	Run_machine(&route, LOCOMOTIVE_1);
 }
@@ -420,11 +422,14 @@ void Received_Message_Processor()
 					Nr++; // update Nr
 					Nr &= NR_AND; // limit Nr in 3 bit, value from 0 to 7
 
+					// save last frame
+					SaveLastFrame();
+
 					// send acknowledgement
-					frame* ack_frame = NULL;
-					int sz_ack = sizeof(ack_frame);
-					GetAckFrame(ack_frame, ACK);
-					Send(UART1_OUTPUT_MBX, RECEIVED_PORCESSOR_MBX, &ack_frame, &sz_ack); // send ack
+					int sz_ack = sizeof(current_frame);
+					GetAckFrame(&current_frame, ACK);
+
+					Send(UART1_OUTPUT_MBX, RECEIVED_PORCESSOR_MBX, &current_frame, &sz_ack); // send ack
 
 					// pass message to train process
 					received_msg* msg = (received_msg*)malloc(sizeof(received_msg)); // get message
@@ -437,10 +442,9 @@ void Received_Message_Processor()
 				else if (ns == Nr+1) // if miss last message
 				{
 					// return NACK
-					frame* nack_frame = NULL;
-					int sz_nack = sizeof(nack_frame);
-					GetAckFrame(nack_frame, NACK);
-					Send(UART1_OUTPUT_MBX, RECEIVED_PORCESSOR_MBX, &nack_frame, &sz_nack); // send nack
+					int sz_nack = sizeof(current_frame);
+					GetAckFrame(&current_frame, NACK);
+					Send(UART1_OUTPUT_MBX, RECEIVED_PORCESSOR_MBX, &current_frame, &sz_nack); // send nack
 				}
 			}
 			else if(type == ACK) // if received ack
