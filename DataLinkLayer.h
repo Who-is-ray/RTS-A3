@@ -14,7 +14,7 @@
 #define MESSAGE	2	//position of message
 #define TYPE_SHIFT	6	//shift right 6 bit to get type
 #define NS_SHIFT	3	//shift right 3 bit to get Ns
-#define NR_AND		0x11111000 //and this to  get Nr
+#define NR_AND		0b00000111 //and this to  get Nr
 
 typedef enum { DATA, ACK, NACK }PktType;
 
