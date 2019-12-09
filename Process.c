@@ -210,6 +210,7 @@ void SendFrame(frame* to_send, int locomotive)
 	int sz = sizeof(&to_send);
 	Send(UART1_OUTPUT_MBX, locomotive, &to_send, &sz); // output message
 	Ns++; // update Ns
+	Ns &= NR_AND; // limit Ns in 3 bit, value from 0 to 7
 
 	// Notice Systick
 	RESEND_COUNTING = TRUE;
@@ -282,7 +283,7 @@ int Run_machine(program* prog, int locomotive)
 				memcpy(&msg.arg2,&speed, sizeof(msg.arg2));
 
 				SentMessage(TWO_ARGS, &msg, locomotive);
-//////see line 225
+
 				int arrive_destination = FALSE;
 				while (!arrive_destination)
 				{
@@ -413,6 +414,7 @@ void Received_Message_Processor()
 				if (ns == Nr) // if received correct message
 				{
 					Nr++; // update Nr
+					Nr &= NR_AND; // limit Nr in 3 bit, value from 0 to 7
 
 					// send acknowledgement
 					frame* ack_frame = NULL;
