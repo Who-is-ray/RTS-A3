@@ -433,7 +433,7 @@ void Received_Message_Processor()
 					// send acknowledgement
 					GetAckFrame(&current_frame, ACK);
 
-					OutputData(current_frame.frm, current_frame.length, UART1); // output message
+                    Send(UART1_OUTPUT_MBX, RECEIVED_PORCESSOR_MBX, &current_frame, &sz_ack); // send ack
 
 					// pass message to train process
 					received_msg* msg = (received_msg*)malloc(sizeof(received_msg)); // get message
@@ -470,8 +470,8 @@ void Received_Message_Processor()
 			else if(type == NACK) // if received nack
 			{
 				// resend last frame and current frame
-                OutputData(current_frame.frm, current_frame.length, UART1); // output message
-                OutputData(current_frame.frm, current_frame.length, UART1); // output message
+                SendFrame(&privious_frame, LOCOMOTIVE_1);
+                SendFrame(&current_frame, LOCOMOTIVE_1);
 			}
 		}
 		else
