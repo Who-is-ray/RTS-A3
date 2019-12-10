@@ -295,14 +295,11 @@ int Run_machine(program* prog, int locomotive)
 				SentMessage(TWO_ARGS, &msg, locomotive);
 
 				int arrive_destination = FALSE;
-				while (!arrive_destination)
+				while (!arrive_destination) // keep check current location until reach destination
 				{
 					received_msg* hs_msg = NULL;
 					int sz = sizeof(hs_msg);
 					int sender;
-
-					int delay;
-					for (delay = 0;delay<200000;delay++);
 
 					Receive(locomotive, &sender, &hs_msg, &sz); // receive message
 
@@ -352,6 +349,7 @@ int Run_machine(program* prog, int locomotive)
 				Message msg = { LOCOMOTIVE_CONTROLER, locomotive };
 				memcpy(&msg.arg2, &speed, sizeof(msg.arg2));
 
+				// set time to wait
 				int sender = ERROR;
 				received_msg* rec_msg;
 				int sz_msg = sizeof(rec_msg);
@@ -371,6 +369,7 @@ int Run_machine(program* prog, int locomotive)
 					free(rec_msg); // release memory
 				}
 
+				// reset to speed
 				mag_dir speed_resume = { curr_spd, IGNORED, curr_dir };
 				memcpy(&msg.arg2, &speed_resume, sizeof(msg.arg2));
 				SentMessage(TWO_ARGS, &msg, locomotive);
@@ -384,6 +383,7 @@ int Run_machine(program* prog, int locomotive)
 	return TRUE;
 }
 
+// Process of train 1
 void Train_1_Application_Process()
 {
 	int mbx = Bind(LOCOMOTIVE_1); // bind mailbox

@@ -38,6 +38,8 @@ void GetAckFrame(void* fm, PktType type)
 
 	// set control
 	control ctl = { Nr,IGNORED,type };
+
+    // create packet
 	packet pkt;
 	memcpy(&(pkt.pkt[CONTROL]), &ctl, sizeof(control));
 	pkt.size = 1;

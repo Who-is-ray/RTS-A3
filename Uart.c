@@ -24,12 +24,11 @@
 
 volatile int UART0_STATUS = IDLE;
 volatile int UART1_STATUS = IDLE;
-int DATA_COUNT = 0;
-int STX_RECEIVED = FALSE;
-int DLE_RECEIVED = FALSE;
-frame* RECEIVED_FRAME = NULL;
+int DATA_COUNT = 0; // received data count
+int STX_RECEIVED = FALSE; //uart 1 receiving flag for start byte
+int DLE_RECEIVED = FALSE; //uart 1 receiving flag for IDE
+frame* RECEIVED_FRAME = NULL; // uart 1 received frame
 
-extern int PROGRAM_START;
 extern void SendCall(SendMsgArgs* args);
 
 void UART0_Init(void)
@@ -115,8 +114,6 @@ void UART0_IntHandler(void)
 	{
 		/* RECV done - clear interrupt and make char available to application */
 		UART0_ICR_R |= UART_INT_RX;
-		if(!PROGRAM_START)
-		    PROGRAM_START = TRUE;
 	}
 
 	if (UART0_MIS_R & UART_INT_TX)

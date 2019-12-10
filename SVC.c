@@ -125,6 +125,7 @@ void SVCall(void)
 
 }
 
+// send fuction, allow special caller like Uart or Systick which has no mailbox binded
 void SendCall(SendMsgArgs* args)
 {
 	if (MAILBOXLIST[args->Sender].Owner == RUNNING || args->Sender == SYSTICK_MBX || args->Sender == UART1_MBX) // if sender is valid or from special sender (UartISR, SystickISR)
