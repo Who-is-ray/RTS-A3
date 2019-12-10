@@ -398,8 +398,7 @@ void Train_1_Application_Process()
 
 	while(!PROGRAM_START);
 
-	while(1);
-	//Run_machine(&route, LOCOMOTIVE_1);
+	Run_machine(&route, LOCOMOTIVE_1);
 }
 
 /* The process to manage the received message from trainset*/
