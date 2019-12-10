@@ -433,6 +433,7 @@ void Received_Message_Processor()
 					// send acknowledgement
 					GetAckFrame(&current_frame, ACK);
 
+                    int sz_ack = sizeof(&current_frame);
                     Send(UART1_OUTPUT_MBX, RECEIVED_PORCESSOR_MBX, &current_frame, &sz_ack); // send ack
 
 					// pass message to train process
