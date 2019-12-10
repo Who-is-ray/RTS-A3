@@ -26,6 +26,7 @@
 #define INITIAL_STACK_TOP_OFFSET    960 //stack top offset of stack pointer
 #define UART0_OUTPUT_MBX	20	//Uart0 output mailbox number
 #define UART1_OUTPUT_MBX	21	//Uart1 output mailbox number
+#define IDLE_MBX            22  //IDLE mailbox number
 #define PID_IDLE		0	//process id Idle
 #define PID_UART0		4	//process id Uart0
 #define PID_UART1       5   //process id Uart1
@@ -61,8 +62,15 @@ typedef struct
 // function of idle process
 void process_IDLE()
 {
-	while (1);
-}
+    Bind(IDLE_MBX); // bind mailbox
+    int idl = '.';
+    int sz = sizeof(idl);
+    while(1)
+    {
+        Send(UART0_OUTPUT_MBX, IDLE_MBX, &idl, &sz); // send nack
+        int i;
+        for(i = 0; i<100000; i++);
+    }}
 
 // Uart0 output process
 void process_UART0_OUTPUT()
@@ -310,6 +318,12 @@ int Run_machine(program* prog, int locomotive)
 					{
 						if (hs_msg->msg->code == HOLESENSOR_TRAINSET) // if is hole sensor message
 						{
+						    int idl = 'H';
+						    int sz = sizeof(idl);
+
+						    Send(UART0_OUTPUT_MBX, locomotive, &idl, &sz); // send signal
+
+
 							if (hs_msg->msg->arg1 == destination) // if arrive destination
 							{
 								arrive_destination = TRUE;
@@ -340,6 +354,8 @@ int Run_machine(program* prog, int locomotive)
                 Message msg = { LOCOMOTIVE_CONTROLER, 0xff};
 				memcpy(&msg.arg2, &speed, sizeof(msg.arg2));
 				SentMessage(TWO_ARGS, &msg, locomotive); // send message
+                int delay;
+                for (delay = 0;delay<200000;delay++);
 
 				break;
 			}
@@ -390,9 +406,10 @@ void Train_1_Application_Process()
 
 	// create route
 	program route = { 13,
+	    GO, CCW, 5, 7,
+	    //HALT,
 	    SWITCH, 4, DIVERGED, /* Switch '0' to diverged */
-	    GO, CW, 5, 8,
-	    GO, CCW, 5, 19, /* Go CW @ speed 5 to HS#3 */
+	    GO, CW, 5, 18, /* Go CW @ speed 5 to HS#3 */
 	    HALT,
 	    END };
 
