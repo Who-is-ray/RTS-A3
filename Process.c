@@ -398,7 +398,8 @@ void Train_1_Application_Process()
 
 	while(!PROGRAM_START);
 
-	Run_machine(&route, LOCOMOTIVE_1);
+	while(1);
+	//Run_machine(&route, LOCOMOTIVE_1);
 }
 
 /* The process to manage the received message from trainset*/
@@ -435,7 +436,9 @@ void Received_Message_Processor()
 					// send acknowledgement
 					GetAckFrame(&current_frame, ACK);
 
-					OutputData(current_frame.frm, current_frame.length, UART1); // output message
+					frame* fm = &current_frame;
+					int sz_ack = sizeof(&current_frame);
+                    Send(UART1_OUTPUT_MBX, RECEIVED_PORCESSOR_MBX, &fm, &sz_ack); // send ack
 
 					// pass message to train process
 					received_msg* msg = (received_msg*)malloc(sizeof(received_msg)); // get message
@@ -471,9 +474,9 @@ void Received_Message_Processor()
 			}
 			else if(type == NACK) // if received nack
 			{
-				// resend last frame and current frame
-                OutputData(current_frame.frm, current_frame.length, UART1); // output message
-                OutputData(current_frame.frm, current_frame.length, UART1); // output message
+                // resend last frame and current frame
+                SendFrame(&privious_frame, LOCOMOTIVE_1);
+                SendFrame(&current_frame, LOCOMOTIVE_1);
 			}
 		}
 		else
