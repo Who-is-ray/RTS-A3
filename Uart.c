@@ -29,6 +29,7 @@ int STX_RECEIVED = FALSE;
 int DLE_RECEIVED = FALSE;
 frame* RECEIVED_FRAME = NULL;
 
+extern int PROGRAM_START;
 extern void SendCall(SendMsgArgs* args);
 
 void UART0_Init(void)
@@ -114,7 +115,8 @@ void UART0_IntHandler(void)
 	{
 		/* RECV done - clear interrupt and make char available to application */
 		UART0_ICR_R |= UART_INT_RX;
-		// no receive function for uart 0
+		if(!PROGRAM_START)
+		    PROGRAM_START = TRUE;
 	}
 
 	if (UART0_MIS_R & UART_INT_TX)
@@ -158,10 +160,10 @@ void UART1_IntHandler(void)
 
 		if (data == STX && !STX_RECEIVED) // if received STX and not in recording
 		{
+			DATA_COUNT = 0; // reset data_count
 			STX_RECEIVED = TRUE;
 			RECEIVED_FRAME = (frame*)malloc(sizeof(frame));
 			RECEIVED_FRAME->frm[DATA_COUNT++] = data;
-			DATA_COUNT = 0; // reset data_count
 		}
 		else if (STX_RECEIVED) // if in recording
 		{
@@ -179,6 +181,8 @@ void UART1_IntHandler(void)
 				RECEIVED_FRAME->frm[DATA_COUNT++] = data; // record data anyway
 				DLE_RECEIVED = FALSE;
 			}
+			else if (data == STX)
+                DATA_COUNT = 1;
 			else if (data == DLE) // if received DLE
 				DLE_RECEIVED = TRUE;
 			else if (data == ETX) // if received ETX

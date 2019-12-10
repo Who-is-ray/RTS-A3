@@ -46,7 +46,7 @@ volatile PCB* RUNNING = NULL;
 
 volatile int RESEND_COUNTING = FALSE; // flag for systick to count for resend
 volatile int RESEND_MBX; // MAILBOX to receive resend notice from systick
-
+volatile int PROGRAM_START = FALSE;
 volatile char Ns = 0; // receive seq #
 volatile char Nr = 0; // send seq #
 frame privious_frame;
@@ -228,6 +228,7 @@ void SendFrame(frame* to_send, int locomotive)
 		{
 			if (rec_msg->type == ACK) // if received ack
 				rec_ack = TRUE;
+			RESEND_COUNTING = FALSE;
 		}
 
 		else if (sender == SYSTICK_MBX) // if time to resend
@@ -287,7 +288,7 @@ int Run_machine(program* prog, int locomotive)
 
 				//create message
 				mag_dir speed = { curr_spd, IGNORED, curr_dir };
-				Message msg = { LOCOMOTIVE_CONTROLER, locomotive};
+				Message msg = { LOCOMOTIVE_CONTROLER, 0xff};
 				//Message is the same name with in Message.h but in process.c we didn't include Message.h
 				memcpy(&msg.arg2,&speed, sizeof(msg.arg2));
 
@@ -299,6 +300,10 @@ int Run_machine(program* prog, int locomotive)
 					received_msg* hs_msg = NULL;
 					int sz = sizeof(hs_msg);
 					int sender;
+
+					int delay;
+					for (delay = 0;delay<200000;delay++);
+
 					Receive(locomotive, &sender, &hs_msg, &sz); // receive message
 
 					if (sender == RECEIVED_PORCESSOR_MBX) // if reached a hole sensor
@@ -329,10 +334,10 @@ int Run_machine(program* prog, int locomotive)
 			}
 			case HALT: /* Halt the train */
 			{
-				//create message
+			    //create message
 				mag_dir speed = { 0, IGNORED, IGNORED };
 				curr_spd = 0;
-				Message msg = { LOCOMOTIVE_CONTROLER, locomotive };
+                Message msg = { LOCOMOTIVE_CONTROLER, 0xff};
 				memcpy(&msg.arg2, &speed, sizeof(msg.arg2));
 				SentMessage(TWO_ARGS, &msg, locomotive); // send message
 
@@ -385,11 +390,13 @@ void Train_1_Application_Process()
 
 	// create route
 	program route = { 13,
+	    SWITCH, 4, DIVERGED, /* Switch '0' to diverged */
 	    GO, CW, 5, 8,
-	    SWITCH, 3, DIVERGED, /* Switch '0' to diverged */
 	    GO, CCW, 5, 19, /* Go CW @ speed 5 to HS#3 */
 	    HALT,
 	    END };
+
+	while(!PROGRAM_START);
 
 	Run_machine(&route, LOCOMOTIVE_1);
 }
@@ -426,10 +433,11 @@ void Received_Message_Processor()
 					SaveLastFrame();
 
 					// send acknowledgement
-					int sz_ack = sizeof(current_frame);
 					GetAckFrame(&current_frame, ACK);
 
-					Send(UART1_OUTPUT_MBX, RECEIVED_PORCESSOR_MBX, &current_frame, &sz_ack); // send ack
+					frame* fm = &current_frame;
+					int sz_ack = sizeof(&current_frame);
+                    Send(UART1_OUTPUT_MBX, RECEIVED_PORCESSOR_MBX, &fm, &sz_ack); // send ack
 
 					// pass message to train process
 					received_msg* msg = (received_msg*)malloc(sizeof(received_msg)); // get message
@@ -465,9 +473,9 @@ void Received_Message_Processor()
 			}
 			else if(type == NACK) // if received nack
 			{
-				// resend last frame and current frame
-				SendFrame(&privious_frame, LOCOMOTIVE_1);
-				SendFrame(&current_frame, LOCOMOTIVE_1);
+                // resend last frame and current frame
+                SendFrame(&privious_frame, LOCOMOTIVE_1);
+                SendFrame(&current_frame, LOCOMOTIVE_1);
 			}
 		}
 		else
