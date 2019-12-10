@@ -288,7 +288,7 @@ int Run_machine(program* prog, int locomotive)
 
 				//create message
 				mag_dir speed = { curr_spd, IGNORED, curr_dir };
-				Message msg = { LOCOMOTIVE_CONTROLER, locomotive};
+				Message msg = { LOCOMOTIVE_CONTROLER, 0xff};
 				//Message is the same name with in Message.h but in process.c we didn't include Message.h
 				memcpy(&msg.arg2,&speed, sizeof(msg.arg2));
 
@@ -396,8 +396,7 @@ void Train_1_Application_Process()
 	    HALT,
 	    END };
 
-	while(1);
-	//Run_machine(&route, LOCOMOTIVE_1);
+	Run_machine(&route, LOCOMOTIVE_1);
 }
 
 /* The process to manage the received message from trainset*/
