@@ -46,7 +46,7 @@ volatile PCB* RUNNING = NULL;
 
 volatile int RESEND_COUNTING = FALSE; // flag for systick to count for resend
 volatile int RESEND_MBX; // MAILBOX to receive resend notice from systick
-
+volatile int PROGRAM_START = FALSE;
 volatile char Ns = 0; // receive seq #
 volatile char Nr = 0; // send seq #
 frame privious_frame;
@@ -390,11 +390,13 @@ void Train_1_Application_Process()
 
 	// create route
 	program route = { 13,
+	    SWITCH, 4, DIVERGED, /* Switch '0' to diverged */
 	    GO, CW, 5, 8,
-	    SWITCH, 3, DIVERGED, /* Switch '0' to diverged */
 	    GO, CCW, 5, 19, /* Go CW @ speed 5 to HS#3 */
 	    HALT,
 	    END };
+
+	while(!PROGRAM_START);
 
 	Run_machine(&route, LOCOMOTIVE_1);
 }
@@ -431,7 +433,6 @@ void Received_Message_Processor()
 					SaveLastFrame();
 
 					// send acknowledgement
-					int sz_ack = sizeof(current_frame);
 					GetAckFrame(&current_frame, ACK);
 
 					OutputData(current_frame.frm, current_frame.length, UART1); // output message

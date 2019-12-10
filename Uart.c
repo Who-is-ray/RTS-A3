@@ -29,6 +29,7 @@ int STX_RECEIVED = FALSE;
 int DLE_RECEIVED = FALSE;
 frame* RECEIVED_FRAME = NULL;
 
+extern int PROGRAM_START;
 extern void SendCall(SendMsgArgs* args);
 
 void UART0_Init(void)
@@ -114,7 +115,8 @@ void UART0_IntHandler(void)
 	{
 		/* RECV done - clear interrupt and make char available to application */
 		UART0_ICR_R |= UART_INT_RX;
-		// no receive function for uart 0
+		if(!PROGRAM_START)
+		    PROGRAM_START = TRUE;
 	}
 
 	if (UART0_MIS_R & UART_INT_TX)
