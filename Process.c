@@ -334,10 +334,10 @@ int Run_machine(program* prog, int locomotive)
 			}
 			case HALT: /* Halt the train */
 			{
-				//create message
+			    //create message
 				mag_dir speed = { 0, IGNORED, IGNORED };
 				curr_spd = 0;
-				Message msg = { LOCOMOTIVE_CONTROLER, locomotive };
+                Message msg = { LOCOMOTIVE_CONTROLER, 0xff};
 				memcpy(&msg.arg2, &speed, sizeof(msg.arg2));
 				SentMessage(TWO_ARGS, &msg, locomotive); // send message
 
