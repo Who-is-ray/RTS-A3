@@ -228,6 +228,7 @@ void SendFrame(frame* to_send, int locomotive)
 		{
 			if (rec_msg->type == ACK) // if received ack
 				rec_ack = TRUE;
+			RESEND_COUNTING = FALSE;
 		}
 
 		else if (sender == SYSTICK_MBX) // if time to resend
@@ -299,6 +300,10 @@ int Run_machine(program* prog, int locomotive)
 					received_msg* hs_msg = NULL;
 					int sz = sizeof(hs_msg);
 					int sender;
+
+					int delay;
+					for (delay = 0;delay<200000;delay++);
+
 					Receive(locomotive, &sender, &hs_msg, &sz); // receive message
 
 					if (sender == RECEIVED_PORCESSOR_MBX) // if reached a hole sensor
@@ -391,7 +396,8 @@ void Train_1_Application_Process()
 	    HALT,
 	    END };
 
-	Run_machine(&route, LOCOMOTIVE_1);
+	while(1);
+	//Run_machine(&route, LOCOMOTIVE_1);
 }
 
 /* The process to manage the received message from trainset*/
@@ -429,7 +435,7 @@ void Received_Message_Processor()
 					int sz_ack = sizeof(current_frame);
 					GetAckFrame(&current_frame, ACK);
 
-					Send(UART1_OUTPUT_MBX, RECEIVED_PORCESSOR_MBX, &current_frame, &sz_ack); // send ack
+					OutputData(current_frame.frm, current_frame.length, UART1); // output message
 
 					// pass message to train process
 					received_msg* msg = (received_msg*)malloc(sizeof(received_msg)); // get message
@@ -466,8 +472,8 @@ void Received_Message_Processor()
 			else if(type == NACK) // if received nack
 			{
 				// resend last frame and current frame
-				SendFrame(&privious_frame, LOCOMOTIVE_1);
-				SendFrame(&current_frame, LOCOMOTIVE_1);
+                OutputData(current_frame.frm, current_frame.length, UART1); // output message
+                OutputData(current_frame.frm, current_frame.length, UART1); // output message
 			}
 		}
 		else

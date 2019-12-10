@@ -35,6 +35,7 @@ void EncodeMsgToPacket(char* msg, int length, packet* pkt)
 void GetAckFrame(void* fm, PktType type)
 {
 	frame* frm = (frame*)fm;
+
 	// set control
 	control ctl = { Nr,IGNORED,type };
 	packet pkt;

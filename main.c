@@ -35,5 +35,6 @@ void main (void)
 
 	// Force to go thread mode
 	FirstSVCall = TRUE;
+
 	SVC();
 }

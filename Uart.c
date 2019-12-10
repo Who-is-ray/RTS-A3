@@ -158,10 +158,10 @@ void UART1_IntHandler(void)
 
 		if (data == STX && !STX_RECEIVED) // if received STX and not in recording
 		{
+			DATA_COUNT = 0; // reset data_count
 			STX_RECEIVED = TRUE;
 			RECEIVED_FRAME = (frame*)malloc(sizeof(frame));
 			RECEIVED_FRAME->frm[DATA_COUNT++] = data;
-			DATA_COUNT = 0; // reset data_count
 		}
 		else if (STX_RECEIVED) // if in recording
 		{
@@ -179,6 +179,8 @@ void UART1_IntHandler(void)
 				RECEIVED_FRAME->frm[DATA_COUNT++] = data; // record data anyway
 				DLE_RECEIVED = FALSE;
 			}
+			else if (data == STX)
+                DATA_COUNT = 1;
 			else if (data == DLE) // if received DLE
 				DLE_RECEIVED = TRUE;
 			else if (data == ETX) // if received ETX

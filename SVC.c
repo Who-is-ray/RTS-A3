@@ -29,7 +29,7 @@ extern Mailbox MAILBOXLIST[MAILBOXLIST_SIZE]; // mailbox list stores all mailbox
 extern Mailbox* AVAILABLE_MAILBOX; // head of available mailboxes
 
 volatile int FirstSVCall = FALSE; // first sv call flag
-int UNBLOCK_PRIORITY = 0; //A global variable of the priority of unblocked process
+volatile int UNBLOCK_PRIORITY = 0; //A global variable of the priority of unblocked process
 
 // function to block running process and switch to next process
 // if is terminate, free the memory
@@ -409,12 +409,11 @@ void PendSV_Handler()
 
 	// get next running process
 	if (UNBLOCK_PRIORITY > RUNNING->Priority) // if unblocked higher priority process
-	{
 		RUNNING = PRIORITY_LIST[UNBLOCK_PRIORITY]; // run unblocked process
-		UNBLOCK_PRIORITY = 0;
-	}
 	else
 		RUNNING = RUNNING->Next; // run next
+
+	UNBLOCK_PRIORITY = 0;
 
 	// Update PSP value
 	set_PSP((unsigned long)(RUNNING->PSP));
