@@ -17,7 +17,7 @@
 #include "Queue.h"
 #include "PKCall.h"
 #include "PhysicalLayer.h"
-#include "Systick.h"
+
 #define STX 0x02
 #define ETX 0x03
 #define DLE 0x10
@@ -148,7 +148,6 @@ void UART1_IntHandler(void)
 	 * Simplified UART ISR - handles receive and xmit interrupts
 	 * Application signalled when data received
 	 */
-    SysTickIntDisable();
 	if (UART1_MIS_R & UART_INT_RX)
 	{
 		/* RECV done - clear interrupt and make char available to application */
@@ -209,7 +208,6 @@ void UART1_IntHandler(void)
 		else // if output queue is empty
 			UART1_STATUS = IDLE; // idle
 	}
-	SysTickIntEnable();
 }
 
 void InterruptMasterEnable(void)

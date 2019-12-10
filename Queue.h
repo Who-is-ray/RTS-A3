@@ -58,6 +58,4 @@ void Queue_Init();  // Initialize input queue and output queue by setting the he
 int EnQueueIO(UartId t, Source s, char v);   //Enqueue a character to selected queue
 int DeQueueIO(UartId t, Source* s, char* v);  //Dequeue a character from selected queue
 void OutputData(char* s, int size, int uart_id); // Function to output data
-void SysTickIntEnable(void);
-void SysTickIntDisable(void);
 #endif /* QUEUE_H_ */
